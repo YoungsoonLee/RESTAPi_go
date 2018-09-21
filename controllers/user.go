@@ -2,17 +2,22 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
+	"time"
 
+	"github.com/YoungsoonLee/RESTAPi_go/libs"
 	"github.com/YoungsoonLee/RESTAPi_go/models"
 
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/validation"
 )
 
-// Operations about Users
 type UserController struct {
-	beego.Controller
+	BaseController
 }
 
+// Post ...
 // @Title CreateUser
 // @Description create users
 // @Param	body		body 	models.User	true		"body for user content"
@@ -20,13 +25,57 @@ type UserController struct {
 // @Failure 403 body is empty
 // @router / [post]
 func (u *UserController) Post() {
-	//var user models.User
 
-	beego.Error("Wrong input param. ")
-	u.Data["json"] = models.NewErrorInfo(ErrInputData)
-	//u.ServeJSON()
-	//return
-	//controllers.RetError(err404)
+	var user models.User
+	user.Id = time.Now().UnixNano()
+	user.Displayname = u.Input().Get("displayname")
+	user.Email = u.Input().Get("email")
+	user.Password = u.Input().Get("password")
+
+	// validation
+	valid := validation.Validation{}
+	if v := valid.Range(user.Displayname, 4, 16, "Displayname"); !v.Ok {
+		beego.Error("input data error ", v.Error.Key, v.Error.Message)
+		u.ResponseCommonError(libs.ErrInputDisplayname)
+	}
+
+	user.PasswordResetToken = ""
+	//user.PasswordResetExpire = nil
+	//user.Confirmed
+	user.ConfirmResetToken = ""
+	//user.ConfirmResetExpire = nil
+	user.Picture = ""
+	user.Provider = ""
+	user.ProviderID = ""
+	user.ProviderAccessToken = ""
+	//user.Permission
+	//user.Status
+
+	fmt.Println(user)
+
+	//var user models.User
+	//valid := validation.Validation{}
+	/*
+		err := json.Unmarshal(u.Ctx.Input.RequestBody, &user)
+		if err != nil {
+			beego.Error("unmarshall error. ", err)
+			u.ResponseCommonError(libs.ErrInputData)
+		}
+	*/
+
+	b, err := valid.Valid(&user)
+	if err != nil {
+		// handle error
+		beego.Error("validation. ", err)
+	}
+
+	if !b {
+		// validation does not pass
+		// blabla...
+		for _, err := range valid.Errors {
+			log.Println(err.Key, err.Message)
+		}
+	}
 
 	/*
 		err := json.Unmarshal(u.Ctx.Input.RequestBody, &user)
