@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/YoungsoonLee/RESTAPi_go/libs"
+
 	"github.com/YoungsoonLee/RESTAPi_go/models"
 )
 
@@ -19,14 +21,16 @@ type ConfirmController struct {
 // @router /:token [get]
 func (c *ConfirmController) Get() {
 	confirmToken := c.GetString(":token")
-	var user models.User
+
+	var user *models.User
+	var libErr *libs.ControllerError
 
 	if confirmToken != "" {
-		user, libErr := models.CheckEmailConfirmToken(confirmToken)
+		user, libErr = models.CheckEmailConfirmToken(confirmToken)
 		if libErr == nil {
 			// update
-			user, err := models.ConfirmEmail(user)
-			fmt.Println("oops: ", user, err)
+			_, err := models.ConfirmEmail(*user)
+			fmt.Println("oops: ", user.Id, err)
 			//
 		} else {
 			// error

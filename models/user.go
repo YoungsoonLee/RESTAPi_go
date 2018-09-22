@@ -126,12 +126,12 @@ func FindByEmail(email string) (User, error) {
 }
 
 // CheckEmailConfirmToken ...
-func CheckEmailConfirmToken(token string) (User, *libs.ControllerError) {
-	var user User
+func CheckEmailConfirmToken(token string) (*User, *libs.ControllerError) {
+	var user *User
 	o := orm.NewOrm()
 
 	// already confirmed
-	err := o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and confirmed = true", token).QueryRow(&user)
+	err := o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirmed = false", token).QueryRow(&user)
 	if err != nil {
 		// already confirmed or wrong token
 		beego.Error("error CheckEmailConfirmToken(already confirm or wrong token): ", token, " , ", err)
@@ -140,7 +140,8 @@ func CheckEmailConfirmToken(token string) (User, *libs.ControllerError) {
 
 	//  expired token
 	err = o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirm_Reset_Expire <= ?", token, time.Now()).QueryRow(&user)
-	if err != nil {
+	if err == nil {
+		// expire token
 		beego.Error("error CheckEmailConfirmToken(expired token): ", token, " , ", err)
 		return user, libs.ErrExpiredToken
 	}
@@ -151,34 +152,35 @@ func CheckEmailConfirmToken(token string) (User, *libs.ControllerError) {
 
 // Confirm Email ...
 //func ConfirmEmail(token string) (User, error) {
-func ConfirmEmail(user User) (User, error) {
+func ConfirmEmail(u User) (User, error) {
 	o := orm.NewOrm()
-
-	user.Confirmed = true
-	user.ConfirmResetToken = ""
-	user.ConfirmResetExpire = time.Time{}
-
-	num, err := o.Update(&user)
-	if err == nil {
-		fmt.Println(num)
+	_, err := o.Raw("UPDATE \"user\" SET Confirmed = ?, Confirm_Reset_Expire=?", true, nil).Exec()
+	if err != nil {
+		//num, _ := res.RowsAffected()
+		//fmt.Println("mysql row affected nums: ", num)
+		return User{}, err
 	}
+
 	/*
-		var user User
 		o := orm.NewOrm()
-		err := o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirm_Reset_Expire >= ?", token, time.Now()).QueryRow(&user)
-		// if err == nil, exists
+		user := User{Id: u.Id}
+
+		//var num int64
+
+		err := o.Read(&user)
 		if err == nil {
-			// update Confirm=true, ConfirmResetToken=nil, ConfirmResetExpire=nil
 			user.Confirmed = true
-			user.ConfirmResetToken = ""
+			//user.ConfirmResetToken = ""
 			user.ConfirmResetExpire = time.Time{}
-			if num, err := o.Update(&user); err == nil {
+
+			num, err := o.Update(&user)
+			if err == nil {
 				fmt.Println(num)
 			}
 		}
 	*/
 
-	return user, err
+	return u, err
 
 }
 
