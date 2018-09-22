@@ -2,15 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
-	"time"
+	"strconv"
 
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
-	"github.com/YoungsoonLee/RESTAPi_go/models"
 
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/validation"
+	"github.com/YoungsoonLee/RESTAPi_go/models"
 )
 
 type UserController struct {
@@ -27,67 +23,41 @@ type UserController struct {
 func (u *UserController) Post() {
 
 	var user models.User
-	user.Id = time.Now().UnixNano()
+
 	user.Displayname = u.Input().Get("displayname")
 	user.Email = u.Input().Get("email")
 	user.Password = u.Input().Get("password")
 
 	// validation
-	valid := validation.Validation{}
-	if v := valid.Range(user.Displayname, 4, 16, "Displayname"); !v.Ok {
-		beego.Error("input data error ", v.Error.Key, v.Error.Message)
-		u.ResponseCommonError(libs.ErrInputDisplayname)
+	u.ValidDisplayname(user.Displayname)
+	u.ValidEmail(user.Email)
+	u.ValidPassword(user.Password)
+
+	// check dup displayname
+	_, err := models.FindByDisplayname(user.Displayname)
+	// if err == nil, already exists displayname
+	if err == nil {
+		u.ResponseCommonError(libs.ErrDupDisplayname)
+	}
+	// check dup email
+	_, err = models.FindByEmail(user.Email)
+	// if err == nil, already exists Email
+	if err == nil {
+		u.ResponseCommonError(libs.ErrDupEmail)
 	}
 
-	user.PasswordResetToken = ""
-	//user.PasswordResetExpire = nil
-	//user.Confirmed
-	user.ConfirmResetToken = ""
-	//user.ConfirmResetExpire = nil
-	user.Picture = ""
-	user.Provider = ""
-	user.ProviderID = ""
-	user.ProviderAccessToken = ""
-	//user.Permission
-	//user.Status
-
-	fmt.Println(user)
-
-	//var user models.User
-	//valid := validation.Validation{}
-	/*
-		err := json.Unmarshal(u.Ctx.Input.RequestBody, &user)
-		if err != nil {
-			beego.Error("unmarshall error. ", err)
-			u.ResponseCommonError(libs.ErrInputData)
-		}
-	*/
-
-	b, err := valid.Valid(&user)
+	// save to db
+	uid, err := models.AddUser(user)
 	if err != nil {
-		// handle error
-		beego.Error("validation. ", err)
+		u.ResponseServerError(libs.ErrDatabase, err)
 	}
 
-	if !b {
-		// validation does not pass
-		// blabla...
-		for _, err := range valid.Errors {
-			log.Println(err.Key, err.Message)
-		}
-	}
+	// TODO: generateToken
 
-	/*
-		err := json.Unmarshal(u.Ctx.Input.RequestBody, &user)
-		if err != nil {
-			beego.Error("Wrong input param. ", err)
-		}
+	// TODO: async send confirmEmail
 
-		uid := models.AddUser(user)
-
-		u.Data["json"] = map[string]string{"uid": strconv.FormatInt(uid, 10)}
-		u.ServeJSON()
-	*/
+	//success
+	u.ResponseSuccess("uid", strconv.FormatInt(uid, 10))
 }
 
 // @Title GetAll

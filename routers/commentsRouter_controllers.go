@@ -7,6 +7,14 @@ import (
 
 func init() {
 
+	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:ConfirmController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:ConfirmController"],
+		beego.ControllerComments{
+			Method: "Get",
+			Router: `/:token`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams: param.Make(),
+			Params: nil})
+
 	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:UserController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:UserController"],
 		beego.ControllerComments{
 			Method: "Post",
