@@ -12,7 +12,7 @@ type ControllerError struct {
 // Predefined controller error values.
 var (
 	Err404 = &ControllerError{404, "404", "page not found"}
-
+	// 10000 ~ related on account or auth
 	ErrInputData                    = &ControllerError{400, "10001", "Data input error"}
 	ErrDisplayname                  = &ControllerError{400, "10002", "Displayname should have 4 ~ 16 letters."}
 	ErrEmail                        = &ControllerError{400, "10003", "Must be a valid email address"}
@@ -20,7 +20,7 @@ var (
 	ErrPassword                     = &ControllerError{400, "10005", "Password should have 8 ~ 16 letters with number and special characters"}
 	ErrDupDisplayname               = &ControllerError{400, "10006", "Displayname already exists"}
 	ErrDupEmail                     = &ControllerError{400, "10007", "Email already exists"}
-	ErrAlreadyConfirmedOrWrongToken = &ControllerError{400, "10008", "Email already confirmed or wrong token. try again."}
+	ErrAlreadyConfirmedOrWrongToken = &ControllerError{400, "10008", "Email already confirmed or wrong token."}
 	ErrExpiredToken                 = &ControllerError{400, "10009", "The token was already expired. try again."}
 
 	ErrNoUser       = &ControllerError{400, "10004", "User information does not exist"}
@@ -34,5 +34,6 @@ var (
 	ErrExpired      = &ControllerError{400, "10012", "Login has expired"}
 	ErrPermission   = &ControllerError{400, "10013", "Permission denied"}
 
+	// 90000 ~ related on system error
 	ErrDatabase = &ControllerError{500, "90001", "Database operation error"}
 )
