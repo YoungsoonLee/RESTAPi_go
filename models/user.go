@@ -58,7 +58,22 @@ func generatePassHash(password string, salt string) (hash string, err error) {
 		return "", err
 	}
 
+	//fmt.Println(fmt.Sprintf("%x", h), password, salt)
+
 	return fmt.Sprintf("%x", h), nil
+}
+
+// CheckPass compare input password.
+func (u *User) CheckPass(pass string) (ok bool, err error) {
+	//fmt.Println(pass, u.Salt)
+	hash, err := generatePassHash(pass, u.Salt)
+	if err != nil {
+		return false, err
+	}
+
+	//fmt.Println(u.Password, hash, u.Password == hash)
+
+	return u.Password == hash, nil
 }
 
 // AddUser ...
@@ -111,8 +126,8 @@ func AddUser(u User) (int64, error) {
 func FindByDisplayname(displayname string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
-
+	err := o.Raw("SELECT Id, Displayname, Password, Salt FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
+	//fmt.Println(user.Salt)
 	return user, err
 }
 
@@ -156,29 +171,8 @@ func ConfirmEmail(u User) (User, error) {
 	o := orm.NewOrm()
 	_, err := o.Raw("UPDATE \"user\" SET Confirmed = ?, Confirm_Reset_Expire=?", true, nil).Exec()
 	if err != nil {
-		//num, _ := res.RowsAffected()
-		//fmt.Println("mysql row affected nums: ", num)
 		return User{}, err
 	}
-
-	/*
-		o := orm.NewOrm()
-		user := User{Id: u.Id}
-
-		//var num int64
-
-		err := o.Read(&user)
-		if err == nil {
-			user.Confirmed = true
-			//user.ConfirmResetToken = ""
-			user.ConfirmResetExpire = time.Time{}
-
-			num, err := o.Update(&user)
-			if err == nil {
-				fmt.Println(num)
-			}
-		}
-	*/
 
 	return u, err
 
@@ -220,15 +214,6 @@ func UpdateUser(uid string, uu *User) (a *User, err error) {
 		return u, nil
 	}
 	return nil, errors.New("User Not Exist")
-}
-
-func Login(username, password string) bool {
-	for _, u := range UserList {
-		if u.Displayname == username && u.Password == password {
-			return true
-		}
-	}
-	return false
 }
 
 func DeleteUser(uid string) {

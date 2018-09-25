@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"strconv"
+	"time"
 
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
 
@@ -11,6 +12,12 @@ import (
 
 type UserController struct {
 	BaseController
+}
+
+type LoginToken struct {
+	Displayname string `json:"user"`
+	Uid         int64  `json:"uid"`
+	Token       string `json:"token"`
 }
 
 // Post ...
@@ -52,12 +59,51 @@ func (u *UserController) Post() {
 		u.ResponseServerError(libs.ErrDatabase, err)
 	}
 
-	// TODO: generateToken
-
-	// TODO: async send confirmEmail
-
 	//success
 	u.ResponseSuccess("uid", strconv.FormatInt(uid, 10))
+}
+
+// @Title Login
+// @Description Logs user into the system
+// @Param	displayname		query 	string	true		"The displayname for login"
+// @Param	password		query 	string	true		"The password for login"
+// @Success 200 {string} login success
+// @Failure 403 user not exist
+// @router /login [post]
+func (u *UserController) Login() {
+
+	displayname := u.Input().Get("displayname")
+	password := u.Input().Get("password")
+
+	// validation
+	u.ValidDisplayname(displayname)
+	u.ValidPassword(password)
+
+	// get userinfo by displayname
+	user, err := models.FindByDisplayname(displayname)
+	if err != nil {
+		u.ResponseCommonError(libs.ErrPass)
+	}
+
+	// check password
+	ok, err := user.CheckPass(password)
+	if !ok || err != nil {
+		// wrong password
+		u.ResponseCommonError(libs.ErrPass)
+	}
+
+	// login
+	et := libs.EasyToken{
+		Displayname: user.Displayname,
+		Uid:         user.Id,
+		Expires:     time.Now().Unix() + 3600,
+	}
+	token, err := et.GetToken()
+	if token == "" || err != nil {
+		u.ResponseCommonError(libs.ErrTokenOther)
+	}
+	//this.Data["json"]  := LoginToken{user.Displayname, user.Id, token}
+	u.ResponseSuccess("login", LoginToken{user.Displayname, user.Id, token})
 }
 
 // @Title GetAll
@@ -121,24 +167,6 @@ func (u *UserController) Delete() {
 	uid := u.GetString(":uid")
 	models.DeleteUser(uid)
 	u.Data["json"] = "delete success!"
-	u.ServeJSON()
-}
-
-// @Title Login
-// @Description Logs user into the system
-// @Param	username		query 	string	true		"The username for login"
-// @Param	password		query 	string	true		"The password for login"
-// @Success 200 {string} login success
-// @Failure 403 user not exist
-// @router /login [get]
-func (u *UserController) Login() {
-	username := u.GetString("username")
-	password := u.GetString("password")
-	if models.Login(username, password) {
-		u.Data["json"] = "login success"
-	} else {
-		u.Data["json"] = "user not exist"
-	}
 	u.ServeJSON()
 }
 
