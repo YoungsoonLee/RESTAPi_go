@@ -17,7 +17,7 @@ type BaseController struct {
 
 // ResponseError ...
 func (b *BaseController) ResponseError(code string, err error) {
-	beego.Error(err.Error())
+	//beego.Error(err.Error())
 
 	response := &models.RespCode{
 		Code:    code,
@@ -25,7 +25,7 @@ func (b *BaseController) ResponseError(code string, err error) {
 		Data:    nil,
 	}
 	b.Ctx.Output.JSON(response, true, true)
-	b.StopRun()
+	//b.StopRun()
 }
 
 // ResponseHTTPError ...
@@ -36,11 +36,13 @@ func (b *BaseController) ResponseHTTPError(status int, code string, err error) {
 
 // ResponseCommonError ...
 func (b *BaseController) ResponseCommonError(e *libs.ControllerError) {
+	beego.Error(fmt.Errorf(e.Message))
 	b.ResponseHTTPError(e.Status, e.Code, fmt.Errorf(e.Message))
 }
 
 // ResponseServerError ...
 func (b *BaseController) ResponseServerError(e *libs.ControllerError, err error) {
+	beego.Error(err)
 	b.ResponseHTTPError(e.Status, e.Code, fmt.Errorf(e.Message))
 }
 
@@ -103,5 +105,5 @@ func (b *BaseController) ResponseSuccess(key string, value interface{}) {
 
 	response.Data[key] = value
 	b.Ctx.Output.JSON(response, true, true)
-	b.StopRun()
+	//b.StopRun()
 }

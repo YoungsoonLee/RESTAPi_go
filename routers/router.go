@@ -23,6 +23,13 @@ func init() {
 		beego.NSNamespace("/confirm",
 			beego.NSInclude(&controllers.ConfirmController{}),
 		),
+
+		//adimn
+		beego.NSNamespace("/admin",
+			beego.NSNamespace("/service",
+				beego.NSInclude(&controllers.ServiceController{}),
+			),
+		),
 	)
 	beego.AddNamespace(ns)
 }
