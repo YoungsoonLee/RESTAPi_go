@@ -100,6 +100,7 @@ func (b *BaseController) ResponseSuccess(key string, value interface{}) {
 		Message: "success",
 		Data:    map[string]interface{}{},
 	}
+
 	response.Data[key] = value
 	b.Ctx.Output.JSON(response, true, true)
 	b.StopRun()

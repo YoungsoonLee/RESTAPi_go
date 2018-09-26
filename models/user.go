@@ -122,11 +122,20 @@ func AddUser(u User) (int64, error) {
 	return u.Id, nil
 }
 
+// FindAuthByDisplayname ...
+func FindAuthByDisplayname(displayname string) (User, error) {
+	var user User
+	o := orm.NewOrm()
+	err := o.Raw("SELECT Id, Displayname, Password, Salt FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
+	//fmt.Println(user.Salt)
+	return user, err
+}
+
 // FindByDisplayname ...
 func FindByDisplayname(displayname string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname, Password, Salt FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
+	err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At   FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
 	//fmt.Println(user.Salt)
 	return user, err
 }
@@ -135,7 +144,7 @@ func FindByDisplayname(displayname string) (User, error) {
 func FindByEmail(email string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Email FROM \"user\" WHERE Email = ?", email).QueryRow(&user)
+	err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE Email = ?", email).QueryRow(&user)
 
 	return user, err
 }

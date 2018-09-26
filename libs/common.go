@@ -22,7 +22,7 @@ var (
 	ErrDupDisplayname               = &ControllerError{400, "10006", "Displayname already exists"}
 	ErrDupEmail                     = &ControllerError{400, "10007", "Email already exists"}
 	ErrAlreadyConfirmedOrWrongToken = &ControllerError{400, "10008", "Email already confirmed or wrong token."}
-	ErrExpiredToken                 = &ControllerError{400, "10009", "The token was already expired. try again."}
+	ErrExpiredToken                 = &ControllerError{401, "10009", "The token was already expired or invalid token. try again."}
 	ErrPass                         = &ControllerError{400, "10010", "User information does not exist or the password is incorrect"}
 	ErrTokenAbsent                  = &ControllerError{400, "10011", "Token absent"}
 	ErrTokenInvalid                 = &ControllerError{400, "10012", "Token invalid"}

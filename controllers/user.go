@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
@@ -34,6 +35,8 @@ func (u *UserController) Post() {
 	user.Displayname = u.Input().Get("displayname")
 	user.Email = u.Input().Get("email")
 	user.Password = u.Input().Get("password")
+
+	// TODO: what about the social
 
 	// validation
 	u.ValidDisplayname(user.Displayname)
@@ -79,8 +82,8 @@ func (u *UserController) Login() {
 	u.ValidDisplayname(displayname)
 	u.ValidPassword(password)
 
-	// get userinfo by displayname
-	user, err := models.FindByDisplayname(displayname)
+	// Find salt, password hash for auth
+	user, err := models.FindAuthByDisplayname(displayname)
 	if err != nil {
 		u.ResponseCommonError(libs.ErrPass)
 	}
@@ -96,7 +99,7 @@ func (u *UserController) Login() {
 	et := libs.EasyToken{
 		Displayname: user.Displayname,
 		Uid:         user.Id,
-		Expires:     time.Now().Unix() + 3600,
+		Expires:     time.Now().Unix() + 3600, // 1 hour
 	}
 	token, err := et.GetToken()
 	if token == "" || err != nil {
@@ -104,6 +107,37 @@ func (u *UserController) Login() {
 	}
 	//this.Data["json"]  := LoginToken{user.Displayname, user.Id, token}
 	u.ResponseSuccess("login", LoginToken{user.Displayname, user.Id, token})
+}
+
+// Auth ...
+// @Title Auth
+// @Description validation of token
+// @Success 200 {object}
+// @Failure 401 unauthorized
+// @router /auth [get]
+func (u *UserController) Auth() {
+	et := libs.EasyToken{}
+	authtoken := strings.TrimSpace(u.Ctx.Request.Header.Get("Authorization"))
+	valido, err := et.ValidateToken(authtoken)
+
+	if !valido || err != nil {
+		u.ResponseCommonError(libs.ErrExpiredToken)
+	}
+
+	u.ResponseSuccess("token", "token is valid")
+}
+
+// Social ...
+// @Title Social
+// @Description register social account or login social account
+// @Success 200 {object}
+// @Failure
+// @router /social [post]
+func (u *UserController) Social() {
+
+	// provider := u.Input().Get("provider")
+	// accessToken := u.Input().Get("accessToken")
+
 }
 
 // @Title GetAll
