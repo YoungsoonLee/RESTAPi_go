@@ -15,11 +15,13 @@ type UserController struct {
 	BaseController
 }
 
+/*
 type LoginToken struct {
 	Displayname string `json:"user"`
 	Uid         int64  `json:"uid"`
 	Token       string `json:"token"`
 }
+*/
 
 // Post ...
 // @Title CreateUser
@@ -101,6 +103,9 @@ func (u *UserController) Login() {
 		Uid:         user.Id,
 		Expires:     time.Now().Unix() + 3600, // 1 hour
 	}
+
+	// TODO: set cookie ???
+
 	token, err := et.GetToken()
 	if token == "" || err != nil {
 		u.ResponseCommonError(libs.ErrTokenOther)

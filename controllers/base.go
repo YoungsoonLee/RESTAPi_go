@@ -25,7 +25,7 @@ func (b *BaseController) ResponseError(code string, err error) {
 		Data:    nil,
 	}
 	b.Ctx.Output.JSON(response, true, true)
-	//b.StopRun()
+	b.StopRun()
 }
 
 // ResponseHTTPError ...
@@ -50,7 +50,7 @@ func (b *BaseController) ResponseServerError(e *libs.ControllerError, err error)
 func (b *BaseController) ValidDisplayname(displayname string) {
 
 	if len(displayname) < 4 || len(displayname) > 16 {
-		beego.Error("key: displayname, value: ", displayname, ", message: ", libs.ErrDisplayname.Message)
+		//beego.Error("key: displayname, value: ", displayname, ", message: ", libs.ErrDisplayname.Message)
 		b.ResponseCommonError(libs.ErrDisplayname)
 	}
 }
@@ -60,13 +60,13 @@ func (b *BaseController) ValidEmail(email string) {
 	valid := validation.Validation{}
 	v := valid.Email(email, "Email")
 	if !v.Ok {
-		loggingValidError(v)
+		//loggingValidError(v)
 		b.ResponseCommonError(libs.ErrEmail)
 	}
 
 	v = valid.MaxSize(email, 100, "Email")
 	if !v.Ok {
-		loggingValidError(v)
+		//loggingValidError(v)
 		b.ResponseCommonError(libs.ErrMaxEmail)
 	}
 }
@@ -97,6 +97,17 @@ func loggingValidError(v *validation.Result) {
 // ResponseSuccess ...
 func (b *BaseController) ResponseSuccess(key string, value interface{}) {
 	b.Ctx.Output.Status = 200
+
+	if key == "" {
+		mresponse := &models.MrespCode{
+			Code:    "ok",
+			Message: "success",
+			Data:    value,
+		}
+		b.Ctx.Output.JSON(mresponse, true, true)
+		b.StopRun()
+	}
+
 	response := &models.RespCode{
 		Code:    "ok",
 		Message: "success",
@@ -105,5 +116,6 @@ func (b *BaseController) ResponseSuccess(key string, value interface{}) {
 
 	response.Data[key] = value
 	b.Ctx.Output.JSON(response, true, true)
-	//b.StopRun()
+	b.StopRun()
+
 }

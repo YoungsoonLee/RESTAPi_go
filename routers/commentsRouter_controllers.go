@@ -7,6 +7,30 @@ import (
 
 func init() {
 
+	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:AuthController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:AuthController"],
+		beego.ControllerComments{
+			Method: "CheckDisplayName",
+			Router: `/:displayname`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:AuthController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:AuthController"],
+		beego.ControllerComments{
+			Method: "Local",
+			Router: `/local`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:AuthController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:AuthController"],
+		beego.ControllerComments{
+			Method: "Login",
+			Router: `/login`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
 	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:ConfirmController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:ConfirmController"],
 		beego.ControllerComments{
 			Method: "Get",

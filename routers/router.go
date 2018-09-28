@@ -24,6 +24,15 @@ func init() {
 			beego.NSInclude(&controllers.ConfirmController{}),
 		),
 
+		//beego.NSRouter("/auth/checkDisplayName/:displayname", &controllers.AuthController{}, "get:CheckDisplayName"),
+
+		beego.NSNamespace("/auth",
+			beego.NSRouter("/checkDisplayName/:displayname", &controllers.AuthController{}, "get:CheckDisplayName"),
+			beego.NSRouter("/register/local", &controllers.AuthController{}, "post:Local"),
+			beego.NSRouter("/login", &controllers.AuthController{}, "post:Login"),
+			beego.NSRouter("/checkLogin", &controllers.AuthController{}, "get:CheckLogin"),
+		),
+
 		//adimn
 		beego.NSNamespace("/admin",
 			beego.NSNamespace("/service",
