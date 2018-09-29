@@ -17,8 +17,16 @@ func init() {
 
 	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:AuthController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:AuthController"],
 		beego.ControllerComments{
-			Method: "Local",
-			Router: `/local`,
+			Method: "CreateUser",
+			Router: `/CreateUser`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:AuthController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:AuthController"],
+		beego.ControllerComments{
+			Method: "Social",
+			Router: `/Social`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams: param.Make(),
 			Params: nil})
@@ -65,14 +73,6 @@ func init() {
 
 	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:UserController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:UserController"],
 		beego.ControllerComments{
-			Method: "Delete",
-			Router: `/:uid`,
-			AllowHTTPMethods: []string{"delete"},
-			MethodParams: param.Make(),
-			Params: nil})
-
-	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:UserController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:UserController"],
-		beego.ControllerComments{
 			Method: "Get",
 			Router: `/:uid`,
 			AllowHTTPMethods: []string{"get"},
@@ -84,6 +84,14 @@ func init() {
 			Method: "Put",
 			Router: `/:uid`,
 			AllowHTTPMethods: []string{"put"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:UserController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:UserController"],
+		beego.ControllerComments{
+			Method: "Delete",
+			Router: `/:uid`,
+			AllowHTTPMethods: []string{"delete"},
 			MethodParams: param.Make(),
 			Params: nil})
 
@@ -108,14 +116,6 @@ func init() {
 			Method: "Logout",
 			Router: `/logout`,
 			AllowHTTPMethods: []string{"get"},
-			MethodParams: param.Make(),
-			Params: nil})
-
-	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:UserController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:UserController"],
-		beego.ControllerComments{
-			Method: "Social",
-			Router: `/social`,
-			AllowHTTPMethods: []string{"post"},
 			MethodParams: param.Make(),
 			Params: nil})
 

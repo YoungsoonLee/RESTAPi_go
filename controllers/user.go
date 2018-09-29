@@ -132,19 +132,6 @@ func (u *UserController) Auth() {
 	u.ResponseSuccess("token", "token is valid")
 }
 
-// Social ...
-// @Title Social
-// @Description register social account or login social account
-// @Success 200 {object}
-// @Failure
-// @router /social [post]
-func (u *UserController) Social() {
-
-	// provider := u.Input().Get("provider")
-	// accessToken := u.Input().Get("accessToken")
-
-}
-
 // @Title GetAll
 // @Description get all Users
 // @Success 200 {object} models.User

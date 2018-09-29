@@ -116,6 +116,8 @@ func AddUser(u User) (int64, error) {
 		return 0, err
 	}
 
+	//TODO: wallet, ?? transaction
+
 	// send confirm mail async
 	go libs.MakeMail(u.Email, "confirm", u.ConfirmResetToken)
 

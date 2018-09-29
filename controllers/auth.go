@@ -15,9 +15,14 @@ type AuthController struct {
 }
 
 type LoginToken struct {
-	Displayname string `json:"user"`
+	Displayname string `json:"displayname"`
 	Uid         int64  `json:"uid"`
 	Token       string `json:"token"`
+}
+
+type Social struct {
+	Provider    string `json:"provider"`
+	AccessToken string `json:"accessToken"`
 }
 
 // CheckDisplayName ...
@@ -43,16 +48,16 @@ func (c *AuthController) CheckDisplayName() {
 	c.ResponseSuccess("displayname", displayname)
 }
 
-// Local ...
-// @Title CreateUser
+// CreateUser ...
+// @Title CreateUser except social
 // @Description create users
 // @Param	displayname		query 	string	true		"The displayname"
 // @Param	email			query 	string	true		"The email"
 // @Param	password		query 	string	true		"The password"
 // @Success 200 {int} models.User.Id
 // @Failure 403 body is empty
-// @router /local [post]
-func (c *AuthController) Local() {
+// @router /CreateUser [post]
+func (c *AuthController) CreateUser() {
 
 	var user models.User
 
@@ -163,14 +168,46 @@ func (c *AuthController) makeLogin(user *models.User) {
 	if token == "" || err != nil {
 		c.ResponseCommonError(libs.ErrTokenOther)
 	}
-	//this.Data["json"]  := LoginToken{user.Displayname, user.Id, token}
+
+	// TODO: add balance to LoginToken
 	c.ResponseSuccess("", LoginToken{user.Displayname, user.Id, token})
 }
 
 // CheckLogin ...
 func (c *AuthController) CheckLogin() {
-	//fmt.Println(string(c.Ctx.Input.RequestBody[:]))
 
+	et := libs.EasyToken{}
 	authtoken := strings.TrimSpace(c.Ctx.Request.Header.Get("Authorization"))
-	fmt.Println(authtoken)
+	valido, err := et.ValidateToken(authtoken)
+
+	if !valido || err != nil {
+		c.ResponseCommonError(libs.ErrExpiredToken)
+	}
+
+	c.ResponseSuccess("token", "token is valid")
+}
+
+// Social ...
+// @Title CreateUser or SigninUser for social FB and G+
+// @Description create social users or signin
+// @Param	provider		query 	string	true		"The provider (FB, G+)"
+// @Param	accessToken		query 	string	true		"The accessToken"
+// @Success 200 {int}
+// @Failure 403 body is empty
+// @router /Social [post]
+func (c *AuthController) Social() {
+	/*
+		provider := c.GetString("provider")
+		accessToken := c.GetString("accessToken")
+		fmt.Println(provider, accessToken)
+		fmt.Println(string(c.Ctx.Input.RequestBody[:]))
+	*/
+	var social Social
+	json.Unmarshal(c.Ctx.Input.RequestBody, &social)
+
+	// TODO: validation
+	// unless provier is null or accessToken is null, get error
+
+	fmt.Println(social)
+
 }

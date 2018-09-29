@@ -28,9 +28,10 @@ func init() {
 
 		beego.NSNamespace("/auth",
 			beego.NSRouter("/checkDisplayName/:displayname", &controllers.AuthController{}, "get:CheckDisplayName"),
-			beego.NSRouter("/register/local", &controllers.AuthController{}, "post:Local"),
+			beego.NSRouter("/register", &controllers.AuthController{}, "post:CreateUser"),
 			beego.NSRouter("/login", &controllers.AuthController{}, "post:Login"),
 			beego.NSRouter("/checkLogin", &controllers.AuthController{}, "get:CheckLogin"),
+			beego.NSRouter("/social", &controllers.AuthController{}, "post:Social"),
 		),
 
 		//adimn
