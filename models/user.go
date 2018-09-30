@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/astaxie/beego"
@@ -22,7 +23,7 @@ var (
 
 type User struct {
 	Id                  int64      `orm:"pk"`
-	Displayname         string     `orm:"size(16);unique"`  // 4 ~ 16 letters
+	Displayname         string     `orm:"size(30);unique"`  // 4 ~ 16 letters for local,
 	Email               string     `orm:"size(100);unique"` // max 100 letters
 	Password            string     `orm:"null"`             // if account is provider, this column is null
 	Salt                string     `orm:"null"`
@@ -32,7 +33,7 @@ type User struct {
 	ConfirmResetToken   string     `orm:"size(1000);null"`
 	ConfirmResetExpire  time.Time  `orm:"null"`
 	Picture             string     `orm:"size(1000);null"`
-	Provider            string     `orm:"size(50);null"` // google , fb
+	Provider            string     `orm:"size(50);null"` // google , facebook
 	ProviderID          string     `orm:"size(1000);null"`
 	ProviderAccessToken string     `orm:"size(1000);null"`
 	Permission          string     `orm:"size(50);default(user)"`      // user, admin ...
@@ -124,7 +125,40 @@ func AddUser(u User) (int64, error) {
 	return u.Id, nil
 }
 
+// AddSocialUser ...
+func AddSocialUser(u User) (int64, string, error) {
+	// make Id
+	u.Id = time.Now().UnixNano()
+	u.Displayname = "FB" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	u.Confirmed = true
+
+	// save to db
+	o := orm.NewOrm()
+	_, err := o.Insert(&u)
+	if err != nil {
+		return 0, "", err
+	}
+
+	//TODO: wallet, ?? transaction
+
+	return u.Id, u.Displayname, nil
+}
+
+// UpdateSocialInfo ...
+func UpdateSocialInfo(u User) (int64, string, error) {
+
+	u.Confirmed = true
+
+	o := orm.NewOrm()
+	if _, err := o.Update(&u, "Provider", "ProviderAccessToken", "ProviderID", "Picture", "Confirmed"); err != nil {
+		return 0, "", err
+	}
+
+	return u.Id, u.Displayname, nil
+}
+
 // FindAuthByDisplayname ...
+// using for auth
 func FindAuthByDisplayname(displayname string) (User, error) {
 	var user User
 	o := orm.NewOrm()
@@ -134,6 +168,7 @@ func FindAuthByDisplayname(displayname string) (User, error) {
 }
 
 // FindByDisplayname ...
+// TODO: add balance
 func FindByDisplayname(displayname string) (User, error) {
 	var user User
 	o := orm.NewOrm()
@@ -143,12 +178,29 @@ func FindByDisplayname(displayname string) (User, error) {
 }
 
 // FindByEmail ...
+// TODO: add balance
 func FindByEmail(email string) (User, error) {
 	var user User
 	o := orm.NewOrm()
 	err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE Email = ?", email).QueryRow(&user)
 
 	return user, err
+}
+
+// FindByProvider ...
+func FindByProvider(provider string, accessToken string, providerID string) bool {
+	/*
+		var user User
+		o := orm.NewOrm()
+		err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE provider = ? and accessToken= ?", provider, accessToken).QueryRow(&user)
+
+		return user, err
+	*/
+	o := orm.NewOrm()
+	exist := o.QueryTable("user").Filter("Provider", provider).Filter("ProviderAccessToken", accessToken).Filter("ProviderID", providerID).Exist()
+
+	return exist
+
 }
 
 // CheckEmailConfirmToken ...
@@ -189,6 +241,7 @@ func ConfirmEmail(u User) (User, error) {
 
 }
 
+// Not use maybe ...
 func GetUser(uid string) (u *User, err error) {
 	if u, ok := UserList[uid]; ok {
 		return u, nil

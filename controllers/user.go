@@ -123,7 +123,7 @@ func (u *UserController) Login() {
 func (u *UserController) Auth() {
 	et := libs.EasyToken{}
 	authtoken := strings.TrimSpace(u.Ctx.Request.Header.Get("Authorization"))
-	valido, err := et.ValidateToken(authtoken)
+	valido, _, err := et.ValidateToken(authtoken)
 
 	if !valido || err != nil {
 		u.ResponseCommonError(libs.ErrExpiredToken)

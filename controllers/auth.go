@@ -2,9 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego"
 
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
 	"github.com/YoungsoonLee/RESTAPi_go/models"
@@ -21,8 +22,18 @@ type LoginToken struct {
 }
 
 type Social struct {
-	Provider    string `json:"provider"`
-	AccessToken string `json:"accessToken"`
+	Provider            string `json:"provider"`
+	ProviderAccessToken string `json:"accessToken"`
+	Email               string `json:"email"`
+	ProviderID          string `json:"providerId"`
+	Picture             string `json:"picture"`
+}
+
+type AuthedData struct {
+	//Uid          int64
+	Displayname string
+	Balance     int
+	Pciture     string
 }
 
 // CheckDisplayName ...
@@ -178,13 +189,25 @@ func (c *AuthController) CheckLogin() {
 
 	et := libs.EasyToken{}
 	authtoken := strings.TrimSpace(c.Ctx.Request.Header.Get("Authorization"))
-	valido, err := et.ValidateToken(authtoken)
+	valido, displayname, err := et.ValidateToken(authtoken)
+
+	beego.Info("Check Login: ", displayname, valido)
 
 	if !valido || err != nil {
 		c.ResponseCommonError(libs.ErrExpiredToken)
 	}
 
-	c.ResponseSuccess("token", "token is valid")
+	// get userinfo
+	//fmt.Println("check login: ", displayname)
+	var user models.User
+	user, err = models.FindByDisplayname(displayname)
+	if err != nil {
+		c.ResponseCommonError(libs.ErrNoUser)
+	}
+
+	//fmt.Println(user.Displayname, user.Picture)
+
+	c.ResponseSuccess("", AuthedData{user.Displayname, 0, user.Picture})
 }
 
 // Social ...
@@ -207,7 +230,69 @@ func (c *AuthController) Social() {
 
 	// TODO: validation
 	// unless provier is null or accessToken is null, get error
+	//fmt.Println(social)
 
-	fmt.Println(social)
+	//var user models.User
+	/*
+		exists := models.FindByProvider(social.Provider, social.ProviderAccessToken, social.ProviderID)
+		if exists {
+			// make login
+			fmt.Println()
+		} else {
+			// AddUser
+		}
+	*/
 
+	var user models.User
+	user, err := models.FindByEmail(social.Email)
+
+	// if err == nil, already exists Email
+	if err == nil {
+		// make login
+		//fmt.Println("already exists email ", user)
+		//update social info, it can login local and social both.
+		if len(user.Provider) == 0 || user.Provider != social.Provider {
+			user.Provider = social.Provider
+			user.ProviderAccessToken = social.ProviderAccessToken
+			user.ProviderID = social.ProviderID
+			user.Picture = social.Picture
+
+			c.updateSocialInfo(user)
+		}
+
+		c.makeLogin(&user)
+
+	} else {
+		// add social user
+		user.Provider = social.Provider
+		user.ProviderAccessToken = social.ProviderAccessToken
+		user.ProviderID = social.ProviderID
+		user.Email = social.Email
+		user.Picture = social.Picture
+		c.createSocialUser(user)
+	}
+
+}
+
+func (c *AuthController) createSocialUser(user models.User) {
+
+	uid, displayname, err := models.AddSocialUser(user)
+	if err != nil {
+		c.ResponseServerError(libs.ErrDatabase, err)
+	}
+
+	user.Id = uid
+	user.Displayname = displayname
+	c.makeLogin(&user)
+}
+
+func (c *AuthController) updateSocialInfo(user models.User) {
+	uid, displayname, err := models.UpdateSocialInfo(user)
+	if err != nil {
+		c.ResponseServerError(libs.ErrDatabase, err)
+	}
+
+	user.Id = uid
+	user.Displayname = displayname
+	c.makeLogin(&user)
 }

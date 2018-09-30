@@ -27,8 +27,8 @@ var (
 	ErrTokenAbsent                  = &ControllerError{400, "10011", "Token absent"}
 	ErrTokenInvalid                 = &ControllerError{400, "10012", "Token invalid"}
 	ErrTokenOther                   = &ControllerError{400, "10013", "Token other"}
+	ErrNoUser                       = &ControllerError{400, "10014", "User information does not exist"}
 
-	ErrNoUser       = &ControllerError{400, "10004", "User information does not exist"}
 	ErrNoUserPass   = &ControllerError{400, "10006", "User information does not exist or the password is incorrect"}
 	ErrNoUserChange = &ControllerError{400, "10007", "User information does not exist or data has not changed"}
 	ErrInvalidUser  = &ControllerError{400, "10008", "User information is incorrect"}

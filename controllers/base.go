@@ -25,6 +25,7 @@ func (b *BaseController) ResponseError(code string, err error) {
 		Data:    nil,
 	}
 	b.Ctx.Output.JSON(response, true, true)
+	// TODO: logging
 	b.StopRun()
 }
 
@@ -105,7 +106,7 @@ func (b *BaseController) ResponseSuccess(key string, value interface{}) {
 			Data:    value,
 		}
 		b.Ctx.Output.JSON(mresponse, true, true)
-		b.StopRun()
+		//b.StopRun()
 	}
 
 	response := &models.RespCode{
@@ -116,6 +117,6 @@ func (b *BaseController) ResponseSuccess(key string, value interface{}) {
 
 	response.Data[key] = value
 	b.Ctx.Output.JSON(response, true, true)
-	b.StopRun()
+	//b.StopRun()
 
 }
