@@ -69,13 +69,7 @@ func (c *AuthController) CheckDisplayName() {
 // @Failure 403 body is empty
 // @router /CreateUser [post]
 func (c *AuthController) CreateUser() {
-
 	var user models.User
-
-	//user.Displayname = c.Input().Get("displayname")
-	//user.Email = c.Input().Get("email")
-	//user.Password = c.Input().Get("password")
-
 	json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	//fmt.Println(string(c.Ctx.Input.RequestBody[:]))
 	//fmt.Println(user)
