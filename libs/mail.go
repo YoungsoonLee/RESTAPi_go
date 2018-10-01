@@ -68,7 +68,6 @@ func MakeMail(email string, emailType string, token string) {
 
 	//send email
 	sendEmail(email, emailBody)
-
 }
 
 func sendEmail(email string, emailBody string) {
