@@ -79,7 +79,7 @@ func sendEmail(email string, emailBody string) {
 	m.SetBody("text/html", emailBody)
 	//m.Attach("template.html") // attach whatever you want
 
-	d := gomail.NewDialer("smtp.gmail.com", 587, beego.AppConfig.String("mail::gmail"), beego.AppConfig.String("mail::gpass"))
+	d := gomail.NewDialer("smtp.gmail.com", 587, "youngtip@gmail.com", "rsobfaqgewiixmzl")
 
 	// Send the email to Bob, Cora and Dan.
 	if err := d.DialAndSend(m); err != nil {

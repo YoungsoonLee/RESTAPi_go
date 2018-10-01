@@ -207,11 +207,19 @@ func CheckConfirmEmailToken(token string) (*User, *libs.ControllerError) {
 	o := orm.NewOrm()
 
 	// already confirmed
-	err := o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirmed = false", token).QueryRow(&user)
+	err := o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirmed = true", token).QueryRow(&user)
+	if err == nil {
+		// already confirmed or wrong token
+		beego.Info("CheckConfirmEmailToken (Already confirmed): ", token, " , ", err)
+		return user, libs.ErrAlreadyConfirmed
+	}
+
+	// wrong token
+	err = o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirmed = false", token).QueryRow(&user)
 	if err != nil {
 		// already confirmed or wrong token
-		beego.Error("error CheckConfirmEmailToken(already confirm or wrong token): ", token, " , ", err)
-		return user, libs.ErrAlreadyConfirmedOrWrongToken
+		beego.Error("error CheckConfirmEmailToken(wrong token): ", token, " , ", err)
+		return user, libs.ErrWrongToken
 	}
 
 	//  expired token

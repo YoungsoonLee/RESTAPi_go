@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -20,7 +19,7 @@ type UserController struct {
 
 func (u *UserController) ConfirmEmail() {
 	confirmToken := u.GetString(":confirmToken")
-	fmt.Println(confirmToken)
+	//fmt.Println(confirmToken)
 
 	if len(confirmToken) == 0 {
 		u.ResponseCommonError(libs.ErrTokenAbsent)
@@ -36,8 +35,13 @@ func (u *UserController) ConfirmEmail() {
 			u.ResponseCommonError(libs.ErrSystem)
 		}
 	} else {
-		// error
-		u.ResponseCommonError(libErr)
+		if libErr.Code == "10008" {
+			// alaredy confirmed
+			u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
+		} else {
+			// error
+			u.ResponseCommonError(libErr)
+		}
 	}
 
 	// finish update confirm email.
