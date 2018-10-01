@@ -2,9 +2,12 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego"
 
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
 
@@ -15,14 +18,34 @@ type UserController struct {
 	BaseController
 }
 
-/*
-type LoginToken struct {
-	Displayname string `json:"user"`
-	Uid         int64  `json:"uid"`
-	Token       string `json:"token"`
-}
-*/
+func (u *UserController) ConfirmEmail() {
+	confirmToken := u.GetString(":confirmToken")
+	fmt.Println(confirmToken)
 
+	if len(confirmToken) == 0 {
+		u.ResponseCommonError(libs.ErrTokenAbsent)
+	}
+
+	// find user by email confirm token
+	user, libErr := models.CheckConfirmEmailToken(confirmToken)
+	if libErr == nil {
+		// update
+		_, err := models.ConfirmEmail(*user)
+		if err != nil {
+			beego.Error("email confirm update error: ", err)
+			u.ResponseCommonError(libs.ErrSystem)
+		}
+	} else {
+		// error
+		u.ResponseCommonError(libErr)
+	}
+
+	// finish update confirm email.
+	// havt to go to login in frontend
+	u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
+}
+
+// maybe not use from below
 // Post ...
 // @Title CreateUser
 // @Description create users

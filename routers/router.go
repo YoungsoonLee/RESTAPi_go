@@ -17,13 +17,14 @@ func init() {
 	ns := beego.NewNamespace("/v1",
 
 		beego.NSNamespace("/user",
-			beego.NSInclude(&controllers.UserController{}),
+			beego.NSRouter("/confirmEmail/:confirmToken", &controllers.UserController{}, "post:ConfirmEmail"),
 		),
 
-		beego.NSNamespace("/confirm",
-			beego.NSInclude(&controllers.ConfirmController{}),
-		),
-
+		/*
+			beego.NSNamespace("/confirm",
+				beego.NSInclude(&controllers.ConfirmController{}),
+			),
+		*/
 		//beego.NSRouter("/auth/checkDisplayName/:displayname", &controllers.AuthController{}, "get:CheckDisplayName"),
 
 		beego.NSNamespace("/auth",

@@ -88,7 +88,6 @@ func (b *BaseController) ValidPassword(password string) {
 		loggingValidError(v)
 		b.ResponseCommonError(libs.ErrPassword)
 	}
-
 }
 
 func loggingValidError(v *validation.Result) {

@@ -193,18 +193,16 @@ func FindByProvider(provider string, accessToken string, providerID string) bool
 		var user User
 		o := orm.NewOrm()
 		err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE provider = ? and accessToken= ?", provider, accessToken).QueryRow(&user)
-
 		return user, err
 	*/
 	o := orm.NewOrm()
 	exist := o.QueryTable("user").Filter("Provider", provider).Filter("ProviderAccessToken", accessToken).Filter("ProviderID", providerID).Exist()
 
 	return exist
-
 }
 
-// CheckEmailConfirmToken ...
-func CheckEmailConfirmToken(token string) (*User, *libs.ControllerError) {
+// CheckConfirmEmailToken ...
+func CheckConfirmEmailToken(token string) (*User, *libs.ControllerError) {
 	var user *User
 	o := orm.NewOrm()
 
@@ -212,7 +210,7 @@ func CheckEmailConfirmToken(token string) (*User, *libs.ControllerError) {
 	err := o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirmed = false", token).QueryRow(&user)
 	if err != nil {
 		// already confirmed or wrong token
-		beego.Error("error CheckEmailConfirmToken(already confirm or wrong token): ", token, " , ", err)
+		beego.Error("error CheckConfirmEmailToken(already confirm or wrong token): ", token, " , ", err)
 		return user, libs.ErrAlreadyConfirmedOrWrongToken
 	}
 
@@ -220,7 +218,7 @@ func CheckEmailConfirmToken(token string) (*User, *libs.ControllerError) {
 	err = o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirm_Reset_Expire <= ?", token, time.Now()).QueryRow(&user)
 	if err == nil {
 		// expire token
-		beego.Error("error CheckEmailConfirmToken(expired token): ", token, " , ", err)
+		beego.Error("error CheckConfirmEmailToken(expired token): ", token, " , ", err)
 		return user, libs.ErrExpiredToken
 	}
 
