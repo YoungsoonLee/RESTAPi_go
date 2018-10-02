@@ -56,6 +56,14 @@ func (b *BaseController) ValidDisplayname(displayname string) {
 	}
 }
 
+// ValidId ...
+func (b *BaseController) ValidId(id string) {
+
+	if len(id) == 0 {
+		b.ResponseCommonError(libs.ErrIdAbsent)
+	}
+}
+
 // ValidEmail ...
 func (b *BaseController) ValidEmail(email string) {
 	valid := validation.Validation{}

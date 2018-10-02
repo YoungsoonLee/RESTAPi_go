@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -16,6 +17,11 @@ import (
 // UserController ...
 type UserController struct {
 	BaseController
+}
+
+type ResetPassword struct {
+	ResetToken string `json:"resetToken"`
+	Password   string `json:"password"`
 }
 
 // ConfirmEmail ...
@@ -113,14 +119,7 @@ func (u *UserController) IsValidResetPasswordToken() {
 
 	// find user by reset token
 	user, libErr := models.CheckResetPasswordToken(resetToken)
-	if libErr == nil {
-		// update
-		_, err := models.ConfirmResetPasswordToken(*user)
-		if err != nil {
-			beego.Error("ConfirmResetPasswordToken update error: ", err)
-			u.ResponseCommonError(libs.ErrSystem)
-		}
-	} else {
+	if libErr != nil {
 		if libErr.Code == "10008" {
 			// alaredy confirmed
 			u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
@@ -133,6 +132,39 @@ func (u *UserController) IsValidResetPasswordToken() {
 	// finish update confirm email.
 	// havt to go to login in frontend
 	u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
+}
+
+// ResetPassword ...
+func (u *UserController) ResetPassword() {
+	var resetPassword ResetPassword
+	err := json.Unmarshal(u.Ctx.Input.RequestBody, &resetPassword)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if err := models.ResetPassword(resetPassword.ResetToken, resetPassword.Password); err != nil {
+		beego.Error("reset password error: ", err)
+		u.ResponseCommonError(libs.ErrSystem)
+	}
+
+	u.ResponseSuccess("resetToken", resetPassword.ResetToken)
+}
+
+// GetProfile ...
+func (u *UserController) GetProfile() {
+	var user models.User
+
+	uid := u.GetString(":id")
+
+	// validation
+	u.ValidId(uid)
+
+	user, err := models.FindById(uid)
+	// if err == nil, already exists displayname
+	if err != nil {
+		u.ResponseCommonError(libs.ErrNoUser)
+	}
+	u.ResponseSuccess("", user)
 }
 
 // ---------------------------------------------------------------------------------------------------------------

@@ -172,7 +172,7 @@ func FindAuthByDisplayname(displayname string) (User, error) {
 func FindByDisplayname(displayname string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname , Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At   FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
+	err := o.Raw("SELECT Id, Displayname , Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At   FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
 	//fmt.Println(user.Salt)
 	return user, err
 }
@@ -182,7 +182,17 @@ func FindByDisplayname(displayname string) (User, error) {
 func FindByEmail(email string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE Email = ?", email).QueryRow(&user)
+	err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE Email = ?", email).QueryRow(&user)
+
+	return user, err
+}
+
+// FindById ...
+// TODO: add balance
+func FindById(id string) (User, error) {
+	var user User
+	o := orm.NewOrm()
+	err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE Id = ?", id).QueryRow(&user)
 
 	return user, err
 }
@@ -298,7 +308,7 @@ func CheckResetPasswordToken(resetToken string) (*User, *libs.ControllerError) {
 	if err != nil {
 		// already confirmed or wrong token
 		beego.Error("error CheckResetPasswordToken(wrong token): ", resetToken, " , ", err)
-		return user, libs.ErrWrongToken
+		return user, libs.ErrTokenInvalid
 	}
 
 	//  expired token
@@ -312,15 +322,27 @@ func CheckResetPasswordToken(resetToken string) (*User, *libs.ControllerError) {
 	return user, nil
 }
 
-// ConfirmResetPasswordToken ...
-func ConfirmResetPasswordToken(u User) (User, error) {
-	o := orm.NewOrm()
-	_, err := o.Raw("UPDATE \"user\" SET Password_Reset_Token = ?, Password_Reset_Expire=?", nil, nil).Exec()
+// ResetPassword ...
+func ResetPassword(resetToken, password string) error {
+
+	// make hashed password
+	salt, err := generateSalt()
 	if err != nil {
-		return User{}, err
+		return err
+	}
+	hash, err := generatePassHash(password, salt)
+	if err != nil {
+		return err
 	}
 
-	return u, err
+	o := orm.NewOrm()
+	_, err = o.Raw("UPDATE \"user\" SET Password = ?, Salt = ?, Password_Reset_Token = ?, Password_Reset_Expire=? WHERE Password_Reset_Token = ?", hash, salt, nil, nil, resetToken).Exec()
+	//fmt.Println(r.LastInsertId())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ---------------------------------------------------------------------------------------------------------------

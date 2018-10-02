@@ -30,7 +30,7 @@ type Social struct {
 }
 
 type AuthedData struct {
-	//Uid          int64
+	Uid         int64
 	Displayname string
 	Balance     int
 	Pciture     string
@@ -182,7 +182,7 @@ func (c *AuthController) CheckLogin() {
 
 	//fmt.Println(user.Displayname, user.Picture)
 
-	c.ResponseSuccess("", AuthedData{user.Displayname, 0, user.Picture})
+	c.ResponseSuccess("", AuthedData{user.Id, user.Displayname, 0, user.Picture})
 }
 
 // Social ...

@@ -15,7 +15,7 @@ func MakeMail(email string, emailType string, token string) {
 		//Theme: new(flat),
 		Product: hermes.Product{
 			// Appears in header & footer of e-mails
-			Name: "Hermes",
+			Name: "Closers! naddic games",
 			Link: "https://example-hermes.com/",
 			// Optional product logo
 			Logo: "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
