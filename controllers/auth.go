@@ -159,25 +159,6 @@ func (c *AuthController) Login() {
 	c.makeLogin(&user)
 }
 
-func (c *AuthController) makeLogin(user *models.User) {
-	// login
-	et := libs.EasyToken{
-		Displayname: user.Displayname,
-		Uid:         user.Id,
-		Expires:     time.Now().Unix() + 3600, // 1 hour
-	}
-
-	// TODO: set cookie ???
-
-	token, err := et.GetToken()
-	if token == "" || err != nil {
-		c.ResponseCommonError(libs.ErrTokenOther)
-	}
-
-	// TODO: add balance to LoginToken
-	c.ResponseSuccess("", LoginToken{user.Displayname, user.Id, token})
-}
-
 // CheckLogin ...
 func (c *AuthController) CheckLogin() {
 
@@ -268,6 +249,17 @@ func (c *AuthController) Social() {
 
 }
 
+// @Title Logout
+// @Description Logs user into the system
+// @Param	displayname		query 	string	true		"The displayname for login"
+// @Param	password		query 	string	true		"The password for login"
+// @Success 200 {string} login success
+// @Failure 403 user not exist
+// @router /login [post]
+func (c *AuthController) Logout() {
+
+}
+
 func (c *AuthController) createSocialUser(user models.User) {
 
 	uid, displayname, err := models.AddSocialUser(user)
@@ -289,4 +281,23 @@ func (c *AuthController) updateSocialInfo(user models.User) {
 	user.Id = uid
 	user.Displayname = displayname
 	c.makeLogin(&user)
+}
+
+func (c *AuthController) makeLogin(user *models.User) {
+	// login
+	et := libs.EasyToken{
+		Displayname: user.Displayname,
+		Uid:         user.Id,
+		Expires:     time.Now().Unix() + 3600, // 1 hour
+	}
+
+	// TODO: set cookie ???
+
+	token, err := et.GetToken()
+	if token == "" || err != nil {
+		c.ResponseCommonError(libs.ErrTokenOther)
+	}
+
+	// TODO: add balance to LoginToken
+	c.ResponseSuccess("", LoginToken{user.Displayname, user.Id, token})
 }

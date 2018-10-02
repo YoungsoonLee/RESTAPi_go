@@ -172,7 +172,7 @@ func FindAuthByDisplayname(displayname string) (User, error) {
 func FindByDisplayname(displayname string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At   FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
+	err := o.Raw("SELECT Id, Displayname , Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At   FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
 	//fmt.Println(user.Salt)
 	return user, err
 }
@@ -182,7 +182,7 @@ func FindByDisplayname(displayname string) (User, error) {
 func FindByEmail(email string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE Email = ?", email).QueryRow(&user)
+	err := o.Raw("SELECT Id, Displayname, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE Email = ?", email).QueryRow(&user)
 
 	return user, err
 }
@@ -231,7 +231,6 @@ func CheckConfirmEmailToken(token string) (*User, *libs.ControllerError) {
 	}
 
 	return user, nil
-
 }
 
 // Confirm Email ...
@@ -244,9 +243,87 @@ func ConfirmEmail(u User) (User, error) {
 	}
 
 	return u, err
-
 }
 
+func ResendConfirmEmail(u User) (User, error) {
+	// make email confirm token
+	u2, err := uuid.NewV4()
+	if err != nil {
+		return User{}, err
+	}
+
+	u.ConfirmResetToken = u2.String()
+	u.ConfirmResetExpire = time.Now().Add(1 * time.Hour)
+	u.Confirmed = false
+
+	o := orm.NewOrm()
+	if _, err := o.Update(&u, "Confirmed", "ConfirmResetToken", "ConfirmResetExpire"); err != nil {
+		return User{}, err
+	}
+
+	// send confirm mail async
+	go libs.MakeMail(u.Email, "confirm", u.ConfirmResetToken)
+
+	return u, nil
+}
+
+func SendPasswordResetToken(u User) (User, error) {
+	// make forgot password token
+	u2, err := uuid.NewV4()
+	if err != nil {
+		return User{}, err
+	}
+
+	u.PasswordResetToken = u2.String()
+	ct := time.Now().Add(1 * time.Hour)
+	u.PasswordResetExpire = &ct
+
+	o := orm.NewOrm()
+	if _, err := o.Update(&u, "PasswordResetToken", "PasswordResetExpire"); err != nil {
+		return User{}, err
+	}
+
+	// send confirm mail async
+	go libs.MakeMail(u.Email, "forgotPassword", u.PasswordResetToken)
+
+	return u, nil
+}
+
+func CheckResetPasswordToken(resetToken string) (*User, *libs.ControllerError) {
+	var user *User
+
+	o := orm.NewOrm()
+	// wrong token
+	err := o.Raw("select Id, Displayname, Confirmed from \"user\" where Password_Reset_Token =?", resetToken).QueryRow(&user)
+	if err != nil {
+		// already confirmed or wrong token
+		beego.Error("error CheckResetPasswordToken(wrong token): ", resetToken, " , ", err)
+		return user, libs.ErrWrongToken
+	}
+
+	//  expired token
+	err = o.Raw("select Id, Displayname, Confirmed from \"user\" where Password_Reset_Token =? and Password_Reset_Expire <= ?", resetToken, time.Now()).QueryRow(&user)
+	if err == nil {
+		// expire token
+		beego.Error("error CheckResetPasswordToken(expired token): ", resetToken, " , ", err)
+		return user, libs.ErrExpiredToken
+	}
+
+	return user, nil
+}
+
+// ConfirmResetPasswordToken ...
+func ConfirmResetPasswordToken(u User) (User, error) {
+	o := orm.NewOrm()
+	_, err := o.Raw("UPDATE \"user\" SET Password_Reset_Token = ?, Password_Reset_Expire=?", nil, nil).Exec()
+	if err != nil {
+		return User{}, err
+	}
+
+	return u, err
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Not use maybe ...
 func GetUser(uid string) (u *User, err error) {
 	if u, ok := UserList[uid]; ok {

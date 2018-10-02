@@ -23,23 +23,50 @@ func MakeMail(email string, emailType string, token string) {
 	}
 
 	var rEmail hermes.Email
+	title := ""
 
 	switch emailType {
 	case "confirm":
+		title = "Email confirm."
 		host := beego.AppConfig.String("frontHost") + "/confirmEmail/" + token
 
 		rEmail = hermes.Email{
 			Body: hermes.Body{
-				Name: "Jon Snow",
+				Name: "Closers !",
 				Intros: []string{
-					"Welcome to Hermes! We're very excited to have you on board.",
+					"Welcome to Closers! We're very excited to have you on board.",
 				},
 				Actions: []hermes.Action{
 					{
-						Instructions: "To get started with Hermes, please click here:",
+						Instructions: "To get started with Closers, Need to confirm your email. Please click here:",
 						Button: hermes.Button{
 							Text: "Confirm your account",
 							Link: host,
+						},
+					},
+				},
+				Outros: []string{
+					"Need help, or have questions? Just reply to this email, we'd love to help.",
+				},
+			},
+		}
+	case "forgotPassword":
+		title = "Forgot password"
+		host := beego.AppConfig.String("frontHost") + "/resetPassword/" + token
+
+		rEmail = hermes.Email{
+			Body: hermes.Body{
+				Name: "Closers !",
+				Intros: []string{
+					"Welcome to Closers! We're very excited to have you on board.",
+				},
+				Actions: []hermes.Action{
+					{
+						Instructions: "For reset your password, please click here:",
+						Button: hermes.Button{
+							Color: "#74787E",
+							Text:  "Reset your password",
+							Link:  host,
 						},
 					},
 				},
@@ -67,19 +94,20 @@ func MakeMail(email string, emailType string, token string) {
 	*/
 
 	//send email
-	sendEmail(email, emailBody)
+	sendEmail(email, title, emailBody)
 }
 
-func sendEmail(email string, emailBody string) {
+func sendEmail(email string, title string, emailBody string) {
 	m := gomail.NewMessage()
 	m.SetHeader("From", "youngtip@gmail.com")
 	m.SetHeader("To", email)
 	//m.SetAddressHeader("Cc", "<RECIPIENT CC>", "<RECIPIENT CC NAME>")
-	m.SetHeader("Subject", "golang test")
+	//m.SetHeader("Subject", "golang test")
+	m.SetHeader("Subject", title)
 	m.SetBody("text/html", emailBody)
 	//m.Attach("template.html") // attach whatever you want
 
-	d := gomail.NewDialer("smtp.gmail.com", 587, "youngtip@gmail.com", "rsobfaqgewiixmzl")
+	d := gomail.NewDialer("smtp.gmail.com", 587, beego.AppConfig.String("mail::gmail"), beego.AppConfig.String("mail::gpass"))
 
 	// Send the email to Bob, Cora and Dan.
 	if err := d.DialAndSend(m); err != nil {

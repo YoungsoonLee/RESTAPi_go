@@ -13,10 +13,12 @@ import (
 	"github.com/YoungsoonLee/RESTAPi_go/models"
 )
 
+// UserController ...
 type UserController struct {
 	BaseController
 }
 
+// ConfirmEmail ...
 func (u *UserController) ConfirmEmail() {
 	confirmToken := u.GetString(":confirmToken")
 	//fmt.Println(confirmToken)
@@ -49,6 +51,91 @@ func (u *UserController) ConfirmEmail() {
 	u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
 }
 
+// ResendConfirmEmail ...
+func (u *UserController) ResendConfirmEmail() {
+	email := u.GetString(":email")
+
+	// validation
+	u.ValidEmail(email)
+
+	// check email
+	var user models.User
+	user, err := models.FindByEmail(email)
+	// if err == nil, already exists Email
+	if err != nil {
+		u.ResponseCommonError(libs.ErrNoUser)
+	}
+
+	// update token and send email with confirm token
+	_, err = models.ResendConfirmEmail(user)
+	if err != nil {
+		beego.Error("email confirm update error: ", err)
+		u.ResponseCommonError(libs.ErrSystem)
+	}
+
+	u.ResponseSuccess("", user)
+
+}
+
+// ForogtPassword ...
+func (u *UserController) ForogtPassword() {
+	email := u.GetString(":email")
+
+	// validation
+	u.ValidEmail(email)
+
+	// check email
+	var user models.User
+	user, err := models.FindByEmail(email)
+	// if err == nil, already exists Email
+	if err != nil {
+		u.ResponseCommonError(libs.ErrNoUser)
+	}
+	//fmt.Println(user)
+	// send forgot password token
+	_, err = models.SendPasswordResetToken(user)
+	if err != nil {
+		beego.Error("send password reset token error: ", err)
+		u.ResponseCommonError(libs.ErrSystem)
+	}
+
+	u.ResponseSuccess("", user)
+}
+
+// IsValidResetPasswordToken ...
+func (u *UserController) IsValidResetPasswordToken() {
+	resetToken := u.GetString(":resetToken")
+	//fmt.Println(confirmToken)
+
+	if len(resetToken) == 0 {
+		u.ResponseCommonError(libs.ErrTokenAbsent)
+	}
+
+	// find user by reset token
+	user, libErr := models.CheckResetPasswordToken(resetToken)
+	if libErr == nil {
+		// update
+		_, err := models.ConfirmResetPasswordToken(*user)
+		if err != nil {
+			beego.Error("ConfirmResetPasswordToken update error: ", err)
+			u.ResponseCommonError(libs.ErrSystem)
+		}
+	} else {
+		if libErr.Code == "10008" {
+			// alaredy confirmed
+			u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
+		} else {
+			// error
+			u.ResponseCommonError(libErr)
+		}
+	}
+
+	// finish update confirm email.
+	// havt to go to login in frontend
+	u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // maybe not use from below
 // Post ...
 // @Title CreateUser

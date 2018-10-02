@@ -18,6 +18,9 @@ func init() {
 
 		beego.NSNamespace("/user",
 			beego.NSRouter("/confirmEmail/:confirmToken", &controllers.UserController{}, "post:ConfirmEmail"),
+			beego.NSRouter("/resendConfirmEmail/:email", &controllers.UserController{}, "post:ResendConfirmEmail"),
+			beego.NSRouter("/forgotPassword/:email", &controllers.UserController{}, "post:ForogtPassword"),
+			beego.NSRouter("/isValidResetPasswordToken/:resetToken", &controllers.UserController{}, "post:IsValidResetPasswordToken"),
 		),
 
 		/*
@@ -33,6 +36,7 @@ func init() {
 			beego.NSRouter("/login", &controllers.AuthController{}, "post:Login"),
 			beego.NSRouter("/checkLogin", &controllers.AuthController{}, "get:CheckLogin"),
 			beego.NSRouter("/social", &controllers.AuthController{}, "post:Social"),
+			beego.NSRouter("/logout", &controllers.AuthController{}, "post:Logout"),
 		),
 
 		//adimn
