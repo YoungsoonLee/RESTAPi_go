@@ -186,7 +186,7 @@ func UpdateSocialInfo(u User) (int64, string, error) {
 func FindAuthByDisplayname(displayname string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname, Password, Salt FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
+	err := o.Raw("SELECT Id, Displayname, Password, Salt, Provider FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
 	//fmt.Println(user.Salt)
 	return user, err
 }
@@ -373,6 +373,31 @@ func ResetPassword(resetToken, password string) error {
 func UpdateProfile(u User) (User, error) {
 	o := orm.NewOrm()
 	if _, err := o.Update(&u, "Displayname", "Email"); err != nil {
+		return User{}, err
+	}
+
+	return u, nil
+}
+
+// UpdatePassword
+func UpdatePassword(u User) (User, error) {
+	o := orm.NewOrm()
+
+	// make hashed password
+	salt, err := generateSalt()
+	if err != nil {
+		return User{}, err
+	}
+	hash, err := generatePassHash(u.Password, salt)
+	if err != nil {
+		return User{}, err
+	}
+
+	// set password & salt
+	u.Password = hash
+	u.Salt = salt
+
+	if _, err := o.Update(&u, "Password", "Salt"); err != nil {
 		return User{}, err
 	}
 

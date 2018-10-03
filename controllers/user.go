@@ -179,6 +179,21 @@ func (u *UserController) UpdateProfile() {
 	u.ResponseSuccess("", user)
 }
 
+// UpdatePassword ...
+func (u *UserController) UpdatePassword() {
+	var user models.User
+	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
+
+	fmt.Println(user)
+
+	if _, err := models.UpdatePassword(user); err != nil {
+		beego.Error("update profile error: ", err)
+		u.ResponseCommonError(libs.ErrSystem)
+	}
+	u.ResponseSuccess("", user)
+
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // maybe not use from below
 // Post ...

@@ -134,6 +134,13 @@ func (c *AuthController) Login() {
 		c.ResponseCommonError(libs.ErrPass)
 	}
 
+	if user.Provider == "facebook" && user.Password == "" {
+		c.ResponseCommonError(libs.ErrLoginFacebook)
+	}
+	if user.Provider == "google" && user.Password == "" {
+		c.ResponseCommonError(libs.ErrLoginGoogle)
+	}
+
 	// check password
 	ok, err := user.CheckPass(inputPass)
 	if !ok || err != nil {

@@ -60,7 +60,7 @@ func (b *BaseController) ValidDisplayname(displayname string) {
 func (b *BaseController) ValidId(id string) {
 
 	if len(id) == 0 {
-		b.ResponseCommonError(libs.ErrIdAbsent)
+		b.ResponseCommonError(libs.ErrIDAbsent)
 	}
 }
 
