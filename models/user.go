@@ -2,10 +2,10 @@ package models
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
 	"time"
 
 	"github.com/astaxie/beego"
@@ -129,7 +129,19 @@ func AddUser(u User) (int64, error) {
 func AddSocialUser(u User) (int64, string, error) {
 	// make Id
 	u.Id = time.Now().UnixNano()
-	u.Displayname = "FB" + strconv.FormatInt(time.Now().UnixNano(), 10)
+
+	// for displayname
+	b := make([]byte, 4) //equals 8 charachters
+	rand.Read(b)
+	s := hex.EncodeToString(b)
+
+	//u.Displayname = "FB" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	if u.Provider == "facebook" {
+		u.Displayname = "FB" + s
+	} else {
+		u.Displayname = "GP" + s
+	}
+
 	u.Confirmed = true
 
 	// save to db
@@ -149,8 +161,20 @@ func UpdateSocialInfo(u User) (int64, string, error) {
 
 	u.Confirmed = true
 
+	// for displayname
+	b := make([]byte, 4) //equals 8 charachters
+	rand.Read(b)
+	s := hex.EncodeToString(b)
+
+	//u.Displayname = "FB" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	if u.Provider == "facebook" {
+		u.Displayname = "FB" + s
+	} else {
+		u.Displayname = "GP" + s
+	}
+
 	o := orm.NewOrm()
-	if _, err := o.Update(&u, "Provider", "ProviderAccessToken", "ProviderID", "Picture", "Confirmed"); err != nil {
+	if _, err := o.Update(&u, "Displayname", "Provider", "ProviderAccessToken", "ProviderID", "Picture", "Confirmed"); err != nil {
 		return 0, "", err
 	}
 
@@ -343,6 +367,16 @@ func ResetPassword(resetToken, password string) error {
 	}
 
 	return nil
+}
+
+// UpdateProfile
+func UpdateProfile(u User) (User, error) {
+	o := orm.NewOrm()
+	if _, err := o.Update(&u, "Displayname", "Email"); err != nil {
+		return User{}, err
+	}
+
+	return u, nil
 }
 
 // ---------------------------------------------------------------------------------------------------------------

@@ -23,6 +23,7 @@ func init() {
 			beego.NSRouter("/isValidResetPasswordToken/:resetToken", &controllers.UserController{}, "post:IsValidResetPasswordToken"),
 			beego.NSRouter("/resetPassword/", &controllers.UserController{}, "post:ResetPassword"),
 			beego.NSRouter("/getProfile/:id", &controllers.UserController{}, "post:GetProfile"),
+			beego.NSRouter("/updateProfile/", &controllers.UserController{}, "post:UpdateProfile"),
 		),
 
 		/*

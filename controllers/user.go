@@ -167,6 +167,18 @@ func (u *UserController) GetProfile() {
 	u.ResponseSuccess("", user)
 }
 
+// UpdateProfile ...
+func (u *UserController) UpdateProfile() {
+	var user models.User
+	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
+
+	if _, err := models.UpdateProfile(user); err != nil {
+		beego.Error("update profile error: ", err)
+		u.ResponseCommonError(libs.ErrSystem)
+	}
+	u.ResponseSuccess("", user)
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // maybe not use from below
 // Post ...

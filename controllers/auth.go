@@ -194,29 +194,12 @@ func (c *AuthController) CheckLogin() {
 // @Failure 403 body is empty
 // @router /Social [post]
 func (c *AuthController) Social() {
-	/*
-		provider := c.GetString("provider")
-		accessToken := c.GetString("accessToken")
-		fmt.Println(provider, accessToken)
-		fmt.Println(string(c.Ctx.Input.RequestBody[:]))
-	*/
 	var social Social
 	json.Unmarshal(c.Ctx.Input.RequestBody, &social)
 
 	// TODO: validation
 	// unless provier is null or accessToken is null, get error
 	//fmt.Println(social)
-
-	//var user models.User
-	/*
-		exists := models.FindByProvider(social.Provider, social.ProviderAccessToken, social.ProviderID)
-		if exists {
-			// make login
-			fmt.Println()
-		} else {
-			// AddUser
-		}
-	*/
 
 	var user models.User
 	user, err := models.FindByEmail(social.Email)
