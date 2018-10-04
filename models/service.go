@@ -11,10 +11,10 @@ import (
 
 type Service struct {
 	SID         string    `orm:"column(SID);size(500);pk"`
-	Key         string    `orm:"column(Key);size(500);unique"`
-	Description string    `orm:"column(Description);size(500)"`                //
-	CreateAt    time.Time `orm:"column(CreateAt);type(datetime);auto_now_add"` // first save
-	CloseAt     time.Time `orm:"column(CloseAt);type(datetime);auto_now"`      // eveytime save
+	Key         string    `orm:"size(500);unique"`
+	Description string    `orm:"size(500)"`                   //
+	CreateAt    time.Time `orm:"type(datetime);auto_now_add"` // first save
+	CloseAt     time.Time `orm:"type(datetime);auto_now"`     // eveytime save
 }
 
 func AddService(s Service) (string, error) {

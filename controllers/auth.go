@@ -171,9 +171,9 @@ func (c *AuthController) CheckLogin() {
 
 	et := libs.EasyToken{}
 	authtoken := strings.TrimSpace(c.Ctx.Request.Header.Get("Authorization"))
-	valido, displayname, err := et.ValidateToken(authtoken)
+	valido, uid, err := et.ValidateToken(authtoken)
 
-	beego.Info("Check Login: ", displayname, valido)
+	beego.Info("Check Login: ", uid, valido)
 
 	if !valido || err != nil {
 		c.ResponseCommonError(libs.ErrExpiredToken)
@@ -182,15 +182,16 @@ func (c *AuthController) CheckLogin() {
 	// get userinfo
 	//fmt.Println("check login: ", displayname)
 	var user models.User
-	user, err = models.FindByDisplayname(displayname)
+	//user, err = models.FindByDisplayname(displayname)
+	user, err = models.FindByID(uid)
 	//fmt.Println("oops: ", user.UID)
 	if err != nil {
 		c.ResponseCommonError(libs.ErrNoUser)
 	}
 
-	//fmt.Println(user.Displayname, user.Picture)
+	//beego.Info(user)
 
-	c.ResponseSuccess("", AuthedData{user.UID, user.Displayname, 0, user.Picture})
+	c.ResponseSuccess("", AuthedData{user.UID, user.Displayname, user.Balance, user.Picture})
 }
 
 // Social ...

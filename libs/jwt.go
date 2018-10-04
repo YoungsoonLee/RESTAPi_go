@@ -2,6 +2,7 @@ package libs
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/astaxie/beego"
 	"github.com/dgrijalva/jwt-go"
@@ -28,7 +29,7 @@ func init() {
 func (e EasyToken) GetToken() (string, error) {
 	claims := &jwt.StandardClaims{
 		ExpiresAt: e.Expires, //time.Unix(c.ExpiresAt, 0)
-		Issuer:    e.Displayname,
+		Issuer:    strconv.FormatInt(e.UID, 10),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(verifyKey))
@@ -57,8 +58,9 @@ func (e EasyToken) ValidateToken(tokenString string) (bool, string, error) {
 		if !ok {
 			return false, "", errors.New("claims error" + ErrTokenInvalid.Message)
 		}
-		//fmt.Println(claims["iss"])
+		//fmt.Println(claims)
 		return true, claims["iss"].(string), nil
+
 	} else if ve, ok := err.(*jwt.ValidationError); ok {
 		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
 			return false, "", errors.New(ErrTokenInvalid.Message)

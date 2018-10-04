@@ -159,7 +159,7 @@ func (u *UserController) GetProfile() {
 	// validation
 	u.ValidId(UID)
 
-	user, err := models.FindById(UID)
+	user, err := models.FindByID(UID)
 	// if err == nil, already exists displayname
 	if err != nil {
 		u.ResponseCommonError(libs.ErrNoUser)
