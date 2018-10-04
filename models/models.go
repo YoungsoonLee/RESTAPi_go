@@ -8,9 +8,9 @@ import (
 
 func RegisterDB() {
 	// register model
-	orm.RegisterModel(new(User), new(Service))
+	orm.RegisterModel(new(User), new(Service), new(Wallet))
 
 	orm.RegisterDriver("postgres", orm.DRPostgres)
-	orm.RegisterDataBase("default", "postgres", "postgres://lwezcldi:RqhjUwdBM_xvT3JivKir2ZVZZue90WnZ@stampy.db.elephantsql.com:5432/lwezcldi")
+	orm.RegisterDataBase("default", "postgres", "postgres://sqlmcppd:rC_KcaIStkNyjO7rIRkVQTh77SFejZ7s@baasu.db.elephantsql.com:5432/sqlmcppd")
 
 }

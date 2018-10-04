@@ -10,11 +10,11 @@ import (
 )
 
 type Service struct {
-	Sid         string    `orm:"size(500);pk"`
-	Key         string    `orm:"size(500);unique"`            //
-	Description string    `orm:"size(500)"`                   //
-	CreateAt    time.Time `orm:"auto_now_add;type(datetime)"` // first save
-	CloseAt     time.Time `orm:"datetime;null"`               // s
+	SID         string    `orm:"column(SID);size(500);pk"`
+	Key         string    `orm:"column(Key);size(500);unique"`
+	Description string    `orm:"column(Description);size(500)"`                //
+	CreateAt    time.Time `orm:"column(CreateAt);type(datetime);auto_now_add"` // first save
+	CloseAt     time.Time `orm:"column(CloseAt);type(datetime);auto_now"`      // eveytime save
 }
 
 func AddService(s Service) (string, error) {
@@ -23,10 +23,10 @@ func AddService(s Service) (string, error) {
 	rand.Read(b)
 
 	// make Id
-	s.Sid = "S" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	s.SID = "S" + strconv.FormatInt(time.Now().UnixNano(), 10)
 	s.Key = hex.EncodeToString(b)
 
-	_, err := orm.NewOrm().Raw("INSERT INTO service (Sid, key, Description, Create_At) VALUES ($1, $2, $3, $4)", s.Sid, s.Key, s.Description, time.Now()).Exec()
+	_, err := orm.NewOrm().Raw("INSERT INTO service (SID, key, Description, Create_At) VALUES ($1, $2, $3, $4)", s.SID, s.Key, s.Description, time.Now()).Exec()
 	if err != nil {
 		return "", err
 	}
@@ -39,5 +39,5 @@ func AddService(s Service) (string, error) {
 		}
 	*/
 
-	return s.Sid, nil
+	return s.SID, nil
 }

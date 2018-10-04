@@ -21,25 +21,26 @@ var (
 	UserList map[string]*User
 )
 
+// User ...
 type User struct {
-	Id                  int64      `orm:"pk"`
-	Displayname         string     `orm:"size(30);unique"`  // 4 ~ 16 letters for local,
-	Email               string     `orm:"size(100);unique"` // max 100 letters
-	Password            string     `orm:"null"`             // if account is provider, this column is null
-	Salt                string     `orm:"null"`
-	PasswordResetToken  string     `orm:"size(1000);null"`
-	PasswordResetExpire *time.Time `orm:"null"`
-	Confirmed           bool       `orm:"default(false)"`
-	ConfirmResetToken   string     `orm:"size(1000);null"`
-	ConfirmResetExpire  time.Time  `orm:"null"`
-	Picture             string     `orm:"size(1000);null"`
-	Provider            string     `orm:"size(50);null"` // google , facebook
-	ProviderID          string     `orm:"size(1000);null"`
-	ProviderAccessToken string     `orm:"size(1000);null"`
-	Permission          string     `orm:"size(50);default(user)"`      // user, admin ...
-	Status              string     `orm:"size(50);default(normal)"`    // normal, ban, close ...
-	CreateAt            time.Time  `orm:"auto_now_add;type(datetime)"` // first save
-	UpdateAt            time.Time  `orm:"auto_now;type(datetime)"`     // eveytime save
+	UID                 int64      `orm:"column(UID);pk"`                      //user id
+	Displayname         string     `orm:"column(Displayname);size(30);unique"` // 4 ~ 16 letters for local,
+	Email               string     `orm:"column(Email);size(100);unique"`      // max 100 letters
+	Password            string     `orm:"column(Password);null"`               // if account is provider, this column is null
+	Salt                string     `orm:"column(Salt);null"`
+	PasswordResetToken  string     `orm:"column(PasswordResetToken);size(1000);null"`
+	PasswordResetExpire *time.Time `orm:"column(PasswordResetExpire);null"`
+	Confirmed           bool       `orm:"column(Confirmed);default(false)"`
+	ConfirmResetToken   string     `orm:"column(ConfirmResetToken);size(1000);null"`
+	ConfirmResetExpire  time.Time  `orm:"column(ConfirmResetExpire);null"`
+	Picture             string     `orm:"column(Picture);size(1000);null"`
+	Provider            string     `orm:"column(Provider);size(50);null"` // google , facebook
+	ProviderID          string     `orm:"column(ProviderID);size(1000);null"`
+	ProviderAccessToken string     `orm:"column(ProviderAccessToken);size(1000);null"`
+	Permission          string     `orm:"column(Permission);size(50);default(user)"`    // user, admin ...
+	Status              string     `orm:"column(Status);size(50);default(normal)"`      // normal, ban, close ...
+	CreateAt            time.Time  `orm:"column(CreateAt);type(datetime);auto_now_add"` // first save
+	UpdateAt            time.Time  `orm:"column(UpdateAt);type(datetime);auto_now"`     // eveytime save
 }
 
 const pwHashBytes = 64
@@ -80,7 +81,7 @@ func (u *User) CheckPass(pass string) (ok bool, err error) {
 // AddUser ...
 func AddUser(u User) (int64, error) {
 	// make Id
-	u.Id = time.Now().UnixNano()
+	u.UID = time.Now().UnixNano()
 
 	// make hashed password
 	salt, err := generateSalt()
@@ -110,28 +111,38 @@ func AddUser(u User) (int64, error) {
 	//addTime := time.Now().Add(1 * time.Hour)
 	u.ConfirmResetExpire = time.Now().Add(1 * time.Hour)
 
-	// save to db
+	// save to db with transaction user and wallet
 	o := orm.NewOrm()
+	err = o.Begin()
+
 	_, err = o.Insert(&u)
 	if err != nil {
+		err = o.Rollback()
 		return 0, err
 	}
 
-	//TODO: wallet, ?? transaction
+	wallet := Wallet{UID: u.UID, Balance: 0}
+	_, err = o.Insert(&wallet)
+	if err != nil {
+		err = o.Rollback()
+		return 0, err
+	}
+
+	err = o.Commit()
 
 	// send confirm mail async
 	go libs.MakeMail(u.Email, "confirm", u.ConfirmResetToken)
 
-	return u.Id, nil
+	return u.UID, nil
 }
 
 // AddSocialUser ...
 func AddSocialUser(u User) (int64, string, error) {
 	// make Id
-	u.Id = time.Now().UnixNano()
+	u.UID = time.Now().UnixNano()
 
 	// for displayname
-	b := make([]byte, 4) //equals 8 charachters
+	b := make([]byte, 5) //equals 8 charachters
 	rand.Read(b)
 	s := hex.EncodeToString(b)
 
@@ -153,7 +164,7 @@ func AddSocialUser(u User) (int64, string, error) {
 
 	//TODO: wallet, ?? transaction
 
-	return u.Id, u.Displayname, nil
+	return u.UID, u.Displayname, nil
 }
 
 // UpdateSocialInfo ...
@@ -178,7 +189,7 @@ func UpdateSocialInfo(u User) (int64, string, error) {
 		return 0, "", err
 	}
 
-	return u.Id, u.Displayname, nil
+	return u.UID, u.Displayname, nil
 }
 
 // FindAuthByDisplayname ...
@@ -186,8 +197,7 @@ func UpdateSocialInfo(u User) (int64, string, error) {
 func FindAuthByDisplayname(displayname string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname, Password, Salt, Provider FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
-	//fmt.Println(user.Salt)
+	err := o.Raw("SELECT \"UID\", \"Displayname\", \"Password\", \"Salt\", \"Provider\" FROM \"user\" WHERE \"Displayname\" = ?", displayname).QueryRow(&user)
 	return user, err
 }
 
@@ -196,8 +206,8 @@ func FindAuthByDisplayname(displayname string) (User, error) {
 func FindByDisplayname(displayname string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname , Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At   FROM \"user\" WHERE Displayname = ?", displayname).QueryRow(&user)
-	//fmt.Println(user.Salt)
+	err := o.Raw("SELECT \"UID\", \"Displayname\", \"Email\", \"Confirmed\", \"Picture\", \"Provider\", \"Permission\", \"Status\", \"CreateAt\", \"UpdateAt\" FROM \"user\" WHERE \"Displayname\" = ?", displayname).QueryRow(&user)
+
 	return user, err
 }
 
@@ -206,7 +216,7 @@ func FindByDisplayname(displayname string) (User, error) {
 func FindByEmail(email string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE Email = ?", email).QueryRow(&user)
+	err := o.Raw("SELECT \"UID\", \"Displayname\", \"Email\", \"Confirmed\", \"Picture\", \"Provider\", \"Permission\", \"Status\", \"CreateAt\", \"UpdateAt\" FROM \"user\" WHERE \"Email\" = ?", email).QueryRow(&user)
 
 	return user, err
 }
@@ -216,7 +226,7 @@ func FindByEmail(email string) (User, error) {
 func FindById(id string) (User, error) {
 	var user User
 	o := orm.NewOrm()
-	err := o.Raw("SELECT Id, Displayname, Email, Confirmed, Picture, Provider, Permission, Status, Create_At, Update_At FROM \"user\" WHERE Id = ?", id).QueryRow(&user)
+	err := o.Raw("SELECT \"UID\", \"Displayname\", \"Email\", \"Confirmed\", \"Picture\", \"Provider\", \"Permission\", \"Status\", \"CreateAt\", \"UpdateAt\" FROM \"user\" WHERE \"UID\" = ?", id).QueryRow(&user)
 
 	return user, err
 }
@@ -241,7 +251,7 @@ func CheckConfirmEmailToken(token string) (*User, *libs.ControllerError) {
 	o := orm.NewOrm()
 
 	// already confirmed
-	err := o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirmed = true", token).QueryRow(&user)
+	err := o.Raw("select \"UID\", \"Displayname\", \"Confirmed\" from \"user\" where \"ConfirmResetToken\" =? and \"Confirmed\" = true", token).QueryRow(&user)
 	if err == nil {
 		// already confirmed or wrong token
 		beego.Info("CheckConfirmEmailToken (Already confirmed): ", token, " , ", err)
@@ -249,7 +259,7 @@ func CheckConfirmEmailToken(token string) (*User, *libs.ControllerError) {
 	}
 
 	// wrong token
-	err = o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirmed = false", token).QueryRow(&user)
+	err = o.Raw("select \"UID\", \"Displayname\", \"Confirmed\" from \"user\" where \"ConfirmResetToken\" =? and \"Confirmed\" = false", token).QueryRow(&user)
 	if err != nil {
 		// already confirmed or wrong token
 		beego.Error("error CheckConfirmEmailToken(wrong token): ", token, " , ", err)
@@ -257,7 +267,7 @@ func CheckConfirmEmailToken(token string) (*User, *libs.ControllerError) {
 	}
 
 	//  expired token
-	err = o.Raw("select Id, Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirm_Reset_Expire <= ?", token, time.Now()).QueryRow(&user)
+	err = o.Raw("select \"UID\", \"Displayname\", \"Confirmed\" from \"user\" where \"ConfirmResetToken\" =? and \"ConfirmResetExpire\" <= ?", token, time.Now()).QueryRow(&user)
 	if err == nil {
 		// expire token
 		beego.Error("error CheckConfirmEmailToken(expired token): ", token, " , ", err)
@@ -271,7 +281,7 @@ func CheckConfirmEmailToken(token string) (*User, *libs.ControllerError) {
 //func ConfirmEmail(token string) (User, error) {
 func ConfirmEmail(u User) (User, error) {
 	o := orm.NewOrm()
-	_, err := o.Raw("UPDATE \"user\" SET Confirmed = ?, Confirm_Reset_Expire=?", true, nil).Exec()
+	_, err := o.Raw("UPDATE \"user\" SET \"Confirmed\" = ?, \"ConfirmResetExpire\"=? WHERE \"UID\"=?", true, nil, u.UID).Exec()
 	if err != nil {
 		return User{}, err
 	}
@@ -328,7 +338,7 @@ func CheckResetPasswordToken(resetToken string) (*User, *libs.ControllerError) {
 
 	o := orm.NewOrm()
 	// wrong token
-	err := o.Raw("select Id, Displayname, Confirmed from \"user\" where Password_Reset_Token =?", resetToken).QueryRow(&user)
+	err := o.Raw("select \"UID\", \"Displayname\", \"Confirmed\" from \"user\" where \"PasswordResetToken\" =?", resetToken).QueryRow(&user)
 	if err != nil {
 		// already confirmed or wrong token
 		beego.Error("error CheckResetPasswordToken(wrong token): ", resetToken, " , ", err)
@@ -336,7 +346,7 @@ func CheckResetPasswordToken(resetToken string) (*User, *libs.ControllerError) {
 	}
 
 	//  expired token
-	err = o.Raw("select Id, Displayname, Confirmed from \"user\" where Password_Reset_Token =? and Password_Reset_Expire <= ?", resetToken, time.Now()).QueryRow(&user)
+	err = o.Raw("select \"UID\", \"Displayname\", \"Confirmed\" from \"user\" where \"PasswordResetToken\" =? and \"PasswordResetExpire\" <= ?", resetToken, time.Now()).QueryRow(&user)
 	if err == nil {
 		// expire token
 		beego.Error("error CheckResetPasswordToken(expired token): ", resetToken, " , ", err)
@@ -360,7 +370,7 @@ func ResetPassword(resetToken, password string) error {
 	}
 
 	o := orm.NewOrm()
-	_, err = o.Raw("UPDATE \"user\" SET Password = ?, Salt = ?, Password_Reset_Token = ?, Password_Reset_Expire=? WHERE Password_Reset_Token = ?", hash, salt, nil, nil, resetToken).Exec()
+	_, err = o.Raw("UPDATE \"user\" SET \"Password\" = ?, \"Salt\" = ?, \"PasswordResetToken\" = ?, \"PasswordResetExpire\"=? WHERE \"PasswordResetToken\" = ?", hash, salt, nil, nil, resetToken).Exec()
 	//fmt.Println(r.LastInsertId())
 	if err != nil {
 		return err
@@ -371,6 +381,8 @@ func ResetPassword(resetToken, password string) error {
 
 // UpdateProfile
 func UpdateProfile(u User) (User, error) {
+	//TODO: if email changed, send email confirm.
+
 	o := orm.NewOrm()
 	if _, err := o.Update(&u, "Displayname", "Email"); err != nil {
 		return User{}, err

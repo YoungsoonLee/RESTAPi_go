@@ -17,7 +17,7 @@ type AuthController struct {
 
 type LoginToken struct {
 	Displayname string `json:"displayname"`
-	Uid         int64  `json:"uid"`
+	UID         int64  `json:"uid"`
 	Token       string `json:"token"`
 }
 
@@ -30,7 +30,7 @@ type Social struct {
 }
 
 type AuthedData struct {
-	Uid         int64
+	UID         int64
 	Displayname string
 	Balance     int
 	Pciture     string
@@ -65,7 +65,7 @@ func (c *AuthController) CheckDisplayName() {
 // @Param	displayname		query 	string	true		"The displayname"
 // @Param	email			query 	string	true		"The email"
 // @Param	password		query 	string	true		"The password"
-// @Success 200 {int} models.User.Id
+// @Success 200 {int} models.User.UID
 // @Failure 403 body is empty
 // @router /CreateUser [post]
 func (c *AuthController) CreateUser() {
@@ -93,7 +93,7 @@ func (c *AuthController) CreateUser() {
 	}
 
 	// save to db
-	uid, err := models.AddUser(user)
+	UID, err := models.AddUser(user)
 	if err != nil {
 		c.ResponseServerError(libs.ErrDatabase, err)
 	}
@@ -102,7 +102,7 @@ func (c *AuthController) CreateUser() {
 	//c.ResponseSuccess("uid", strconv.FormatInt(uid, 10))
 
 	// auto login
-	user.Id = uid
+	user.UID = UID
 	c.makeLogin(&user)
 }
 
@@ -183,13 +183,14 @@ func (c *AuthController) CheckLogin() {
 	//fmt.Println("check login: ", displayname)
 	var user models.User
 	user, err = models.FindByDisplayname(displayname)
+	//fmt.Println("oops: ", user.UID)
 	if err != nil {
 		c.ResponseCommonError(libs.ErrNoUser)
 	}
 
 	//fmt.Println(user.Displayname, user.Picture)
 
-	c.ResponseSuccess("", AuthedData{user.Id, user.Displayname, 0, user.Picture})
+	c.ResponseSuccess("", AuthedData{user.UID, user.Displayname, 0, user.Picture})
 }
 
 // Social ...
@@ -252,23 +253,23 @@ func (c *AuthController) Logout() {
 
 func (c *AuthController) createSocialUser(user models.User) {
 
-	uid, displayname, err := models.AddSocialUser(user)
+	UID, displayname, err := models.AddSocialUser(user)
 	if err != nil {
 		c.ResponseServerError(libs.ErrDatabase, err)
 	}
 
-	user.Id = uid
+	user.UID = UID
 	user.Displayname = displayname
 	c.makeLogin(&user)
 }
 
 func (c *AuthController) updateSocialInfo(user models.User) {
-	uid, displayname, err := models.UpdateSocialInfo(user)
+	UID, displayname, err := models.UpdateSocialInfo(user)
 	if err != nil {
 		c.ResponseServerError(libs.ErrDatabase, err)
 	}
 
-	user.Id = uid
+	user.UID = UID
 	user.Displayname = displayname
 	c.makeLogin(&user)
 }
@@ -277,7 +278,7 @@ func (c *AuthController) makeLogin(user *models.User) {
 	// login
 	et := libs.EasyToken{
 		Displayname: user.Displayname,
-		Uid:         user.Id,
+		UID:         user.UID,
 		Expires:     time.Now().Unix() + 3600, // 1 hour
 	}
 
@@ -289,5 +290,5 @@ func (c *AuthController) makeLogin(user *models.User) {
 	}
 
 	// TODO: add balance to LoginToken
-	c.ResponseSuccess("", LoginToken{user.Displayname, user.Id, token})
+	c.ResponseSuccess("", LoginToken{user.Displayname, user.UID, token})
 }

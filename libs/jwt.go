@@ -9,7 +9,7 @@ import (
 
 type EasyToken struct {
 	Displayname string
-	Uid         int64
+	UID         int64
 	Expires     int64
 }
 

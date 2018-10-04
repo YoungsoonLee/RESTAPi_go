@@ -45,7 +45,7 @@ func (u *UserController) ConfirmEmail() {
 	} else {
 		if libErr.Code == "10008" {
 			// alaredy confirmed
-			u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
+			u.ResponseSuccess("UID", strconv.FormatInt(user.UID, 10))
 		} else {
 			// error
 			u.ResponseCommonError(libErr)
@@ -54,7 +54,7 @@ func (u *UserController) ConfirmEmail() {
 
 	// finish update confirm email.
 	// havt to go to login in frontend
-	u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
+	u.ResponseSuccess("UID", strconv.FormatInt(user.UID, 10))
 }
 
 // ResendConfirmEmail ...
@@ -122,7 +122,7 @@ func (u *UserController) IsValidResetPasswordToken() {
 	if libErr != nil {
 		if libErr.Code == "10008" {
 			// alaredy confirmed
-			u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
+			u.ResponseSuccess("UID", strconv.FormatInt(user.UID, 10))
 		} else {
 			// error
 			u.ResponseCommonError(libErr)
@@ -131,7 +131,7 @@ func (u *UserController) IsValidResetPasswordToken() {
 
 	// finish update confirm email.
 	// havt to go to login in frontend
-	u.ResponseSuccess("uid", strconv.FormatInt(user.Id, 10))
+	u.ResponseSuccess("UID", strconv.FormatInt(user.UID, 10))
 }
 
 // ResetPassword ...
@@ -154,12 +154,12 @@ func (u *UserController) ResetPassword() {
 func (u *UserController) GetProfile() {
 	var user models.User
 
-	uid := u.GetString(":id")
+	UID := u.GetString(":UID")
 
 	// validation
-	u.ValidId(uid)
+	u.ValidId(UID)
 
-	user, err := models.FindById(uid)
+	user, err := models.FindById(UID)
 	// if err == nil, already exists displayname
 	if err != nil {
 		u.ResponseCommonError(libs.ErrNoUser)
@@ -200,7 +200,7 @@ func (u *UserController) UpdatePassword() {
 // @Title CreateUser
 // @Description create users
 // @Param	body		body 	models.User	true		"body for user content"
-// @Success 200 {int} models.User.Id
+// @Success 200 {int} models.User.UID
 // @Failure 403 body is empty
 // @router / [post]
 func (u *UserController) Post() {
@@ -238,7 +238,7 @@ func (u *UserController) Post() {
 	}
 
 	//success
-	u.ResponseSuccess("uid", strconv.FormatInt(uid, 10))
+	u.ResponseSuccess("UID", strconv.FormatInt(uid, 10))
 }
 
 // @Title Login
@@ -273,7 +273,7 @@ func (u *UserController) Login() {
 	// login
 	et := libs.EasyToken{
 		Displayname: user.Displayname,
-		Uid:         user.Id,
+		UID:         user.UID,
 		Expires:     time.Now().Unix() + 3600, // 1 hour
 	}
 
@@ -284,7 +284,7 @@ func (u *UserController) Login() {
 		u.ResponseCommonError(libs.ErrTokenOther)
 	}
 	//this.Data["json"]  := LoginToken{user.Displayname, user.Id, token}
-	u.ResponseSuccess("login", LoginToken{user.Displayname, user.Id, token})
+	u.ResponseSuccess("login", LoginToken{user.Displayname, user.UID, token})
 }
 
 // Auth ...
