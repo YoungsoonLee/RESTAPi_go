@@ -181,8 +181,8 @@ func (c *AuthController) CheckLogin() {
 
 	// get userinfo
 	//fmt.Println("check login: ", displayname)
-	var user models.User
-	//user, err = models.FindByDisplayname(displayname)
+	//var user models.User
+	var user models.UserFilter
 	user, err = models.FindByID(uid)
 	//fmt.Println("oops: ", user.UID)
 	if err != nil {

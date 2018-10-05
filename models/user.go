@@ -3,7 +3,6 @@ package models
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -17,31 +16,40 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
-var (
-	UserList map[string]*User
-)
-
 // User ...
 type User struct {
-	UID                 int64      `orm:"column(UID);pk"`   //user id
-	Displayname         string     `orm:"size(30);unique"`  // 4 ~ 16 letters for local,
-	Email               string     `orm:"size(100);unique"` // max 100 letters
-	Password            string     `orm:"null"`             // if account is provider, this column is null
-	Salt                string     `orm:"null"`
-	PasswordResetToken  string     `orm:"size(1000);null"`
-	PasswordResetExpire *time.Time `orm:"null"`
-	Confirmed           bool       `orm:"default(false)"`
-	ConfirmResetToken   string     `orm:"size(1000);null"`
-	ConfirmResetExpire  time.Time  `orm:"null"`
-	Picture             string     `orm:"size(1000);null"`
-	Provider            string     `orm:"size(50);null"` // google , facebook
-	ProviderID          string     `orm:"size(1000);null"`
-	ProviderAccessToken string     `orm:"size(1000);null"`
-	Permission          string     `orm:"size(50);default(user)"`      // user, admin ...
-	Status              string     `orm:"size(50);default(normal)"`    // normal, ban, close ...
-	CreateAt            time.Time  `orm:"type(datetime);auto_now_add"` // first save
-	UpdateAt            time.Time  `orm:"type(datetime);auto_now"`     // eveytime save
-	Balance             int        `orm:"-"`                           //wallet's balance
+	UID                 int64      `orm:"column(UID);pk" json:"uid"`          // user id
+	Displayname         string     `orm:"size(30);unique" json:"displayname"` // 4 ~ 16 letters for local,
+	Email               string     `orm:"size(100);unique" json:"email"`      // max 100 letters
+	Password            string     `orm:"null" json:"password"`               // if account is provider, this column is null
+	Salt                string     `orm:"null" json:"salt"`
+	PasswordResetToken  string     `orm:"size(1000);null" json:"password_reset_token"`
+	PasswordResetExpire *time.Time `orm:"null"  json:"password_reset_expire"`
+	Confirmed           bool       `orm:"default(false)" json:"confirmed"`
+	ConfirmResetToken   string     `orm:"size(1000);null" json:"confirm_reset_token"`
+	ConfirmResetExpire  time.Time  `orm:"null"  json:"confirm_reset_expire"`
+	Picture             string     `orm:"size(1000);null" json:"picture"`
+	Provider            string     `orm:"size(50);null" json:"provider"` // google , facebook
+	ProviderID          string     `orm:"size(1000);null" json:"provider_id"`
+	ProviderAccessToken string     `orm:"size(1000);null" json:"provider_access_token"`
+	Permission          string     `orm:"size(50);default(user)" json:"permission"`     // user, admin ...
+	Status              string     `orm:"size(50);default(normal)" json:"status"`       // normal, ban, close ...
+	CreateAt            time.Time  `orm:"type(datetime);auto_now_add" json:"create_at"` // first save
+	UpdateAt            time.Time  `orm:"type(datetime);auto_now" json:"update_at"`     // eveytime save
+	Balance             int        `orm:"-" json:"balance"`                             // wallet's balance
+}
+
+type UserFilter struct {
+	UID         int64     `orm:"column(UID);pk" json:"uid"`          // user id
+	Displayname string    `orm:"size(30);unique" json:"displayname"` // 4 ~ 16 letters for local,
+	Email       string    `orm:"size(100);unique" json:"email"`      // max 100 letters
+	Picture     string    `orm:"size(1000);null" json:"picture"`
+	Provider    string    `orm:"size(50);null" json:"provider"`                // google , facebook
+	Permission  string    `orm:"size(50);default(user)" json:"permission"`     // user, admin ...
+	Status      string    `orm:"size(50);default(normal)" json:"status"`       // normal, ban, close ...
+	CreateAt    time.Time `orm:"type(datetime);auto_now_add" json:"create_at"` // first save
+	UpdateAt    time.Time `orm:"type(datetime);auto_now" json:"update_at"`     // eveytime save
+	Balance     int       `orm:"-" json:"balance"`                             // wallet's balance
 }
 
 const pwHashBytes = 64
@@ -260,14 +268,11 @@ func FindByEmail(email string) (User, error) {
 }
 
 // FindByID ...
-// TODO: add balance
-func FindByID(id string) (User, error) {
-	var user User
+func FindByID(id string) (UserFilter, error) {
+	var user UserFilter
 	o := orm.NewOrm()
-	//err := o.Raw("SELECT \"UID\", \"Displayname\", \"Email\", \"Confirmed\", \"Picture\", \"Provider\", \"Permission\", \"Status\", \"CreateAt\", \"UpdateAt\" FROM \"user\" WHERE \"UID\" = ?", id).QueryRow(&user)
 	sql := "SELECT " +
-		//" \"user\".\"UID\" , " +
-		" \"UID\", " +
+		" \"user\".\"UID\" , " +
 		" Displayname, " +
 		" Email, " +
 		" Confirmed, " +
@@ -275,28 +280,17 @@ func FindByID(id string) (User, error) {
 		" Provider, " +
 		" Permission, " +
 		" Status, " +
-		//" \"user\".Create_At, " +
-		//" \"user\".Update_At, " +
-		//" \"wallet\".Balance " +
-		" Create_At, " +
-		" Update_At " +
-		//" FROM \"user\", \"wallet\" " +
-		//" WHERE \"user\".\"UID\" = \"wallet\".\"UID\" " +
-		//" and \"user\".\"UID\" = ?"
-		" FROM \"user\" " +
-		" WHERE \"UID\" = ? "
+		" \"user\".Create_At, " +
+		" \"user\".Update_At, " +
+		" \"wallet\".Balance " +
+		" FROM \"user\", \"wallet\" " +
+		" WHERE \"user\".\"UID\" = \"wallet\".\"UID\" " +
+		" and \"user\".\"UID\" = ?"
 	err := o.Raw(sql, id).QueryRow(&user)
+
 	if err != nil {
 		return user, err
 	}
-
-	// get wallet info
-	wallet := Wallet{UID: user.UID}
-	err = o.Read(&wallet, "UID")
-
-	user.Balance = wallet.Balance // set balance
-
-	//fmt.Println(wallet)
 
 	return user, err
 }
@@ -495,45 +489,3 @@ func UpdatePassword(u User) (User, error) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Not use maybe ...
-func GetUser(uid string) (u *User, err error) {
-	if u, ok := UserList[uid]; ok {
-		return u, nil
-	}
-	return nil, errors.New("User not exists")
-}
-
-func GetAllUsers() map[string]*User {
-	return UserList
-}
-
-func UpdateUser(uid string, uu *User) (a *User, err error) {
-	if u, ok := UserList[uid]; ok {
-		if uu.Displayname != "" {
-			u.Displayname = uu.Displayname
-		}
-		if uu.Password != "" {
-			u.Password = uu.Password
-		}
-		/*
-			if uu.Profile.Age != 0 {
-				u.Profile.Age = uu.Profile.Age
-			}
-			if uu.Profile.Address != "" {
-				u.Profile.Address = uu.Profile.Address
-			}
-			if uu.Profile.Gender != "" {
-				u.Profile.Gender = uu.Profile.Gender
-			}
-			if uu.Profile.Email != "" {
-				u.Profile.Email = uu.Profile.Email
-			}
-		*/
-		return u, nil
-	}
-	return nil, errors.New("User Not Exist")
-}
-
-func DeleteUser(uid string) {
-	delete(UserList, uid)
-}

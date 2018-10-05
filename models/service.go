@@ -10,8 +10,8 @@ import (
 )
 
 type Service struct {
-	SID         string    `orm:"column(SID);size(500);pk"`
-	Key         string    `orm:"size(500);unique"`
+	SID         string    `orm:"column(SID);size(500);pk"`    // service id
+	Key         string    `orm:"size(500);unique"`            // key for encrypt
 	Description string    `orm:"size(500)"`                   //
 	CreateAt    time.Time `orm:"type(datetime);auto_now_add"` // first save
 	CloseAt     time.Time `orm:"type(datetime);auto_now"`     // eveytime save
