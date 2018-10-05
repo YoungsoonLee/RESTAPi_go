@@ -39,6 +39,8 @@ type User struct {
 	Balance             int        `orm:"-" json:"balance"`                             // wallet's balance
 }
 
+// UserFilter ...
+// for giving user's info to front or game
 type UserFilter struct {
 	UID         int64     `orm:"column(UID);pk" json:"uid"`          // user id
 	Displayname string    `orm:"size(30);unique" json:"displayname"` // 4 ~ 16 letters for local,

@@ -1,5 +1,21 @@
 package models
 
+import "time"
+
+type paymentItem struct {
+	ItemID          int       `orm:"column(ItemID);pk;auto" json:"itemid"`         // unique, auto increase
+	CategoryID      int       `orm:"column(CategoryID);" json:"categoryid"`        // not null, // paymentCategory 테이블의 pk인 cid
+	ItemName        string    `orm:"size(1000);" json:"item_name"`                 // not null,
+	ItemDescription string    `orm:"size(2000);" json:"item_description"`          // not null,
+	PgID            int       `orm:"column(PgID);;null" json:"pgid"`               // payment_category.category_cid 100번대 일 경우 셋팅 됨. payment_gateway.pg_id
+	Currency        string    `orm:"size(3);default(USD)" json:"currency"`         // not null, default 'USD'
+	Price           int       `orm:"default(0)" json:"price"`                      // not null, payment_category.category_id 100번대 일 경우 셋팅 됨. 나머진 0
+	Amount          int       `orm:"default(0)" json:"amount"`                     // 실제 적립되는 cyber coin 양
+	CreateAt        time.Time `orm:"type(datetime);auto_now_add" json:"create_at"` // first save
+	UpdateAt        time.Time `orm:"type(datetime);auto_now" json:"update_at"`     // eveytime save
+	CloseAt         time.Time `orm:"type(datetime);" json:"close_at"`              //
+}
+
 /**
   payment_items                //유료, 무료 관련 코인 아이템 테이블. 실제 결제시 참조 되는 테이블로 매우 중요한 테이블 이다.
      item_id                      // unique, auto increase
@@ -15,38 +31,4 @@ package models
      closed_at
 
      * discount는 보너스 어마운트를 부여 하는 방식.
-*/
-/*
-exports.up = function(knex, Promise) {
-    return Promise.all([
-        knex.schema.createTable('payment_items', function(table) {
-            table
-                .increments('item_id')
-                .unsigned()
-                .primary();
-            table
-                .integer('category_cid')
-                .unsigned()
-                .notNullable();
-            table.string('item_name').notNullable();
-            table.string('item_description').notNullable();
-            table
-                .integer('pg_id')
-                .unsigned()
-                .notNullable();
-            table.string('currency', 3).defaultTo('USD');
-            table
-                .float('price')
-                .unsigned()
-                .notNullable();
-            table
-                .integer('amount')
-                .unsigned()
-                .notNullable();
-            table.timestamp('created_at').defaultTo(knex.fn.now());
-            table.timestamp('updated_at');
-            table.timestamp('closed_at');
-        })
-    ]);
-};
 */

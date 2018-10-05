@@ -27,13 +27,6 @@ func init() {
 			beego.NSRouter("/updatePassword/", &controllers.UserController{}, "post:UpdatePassword"),
 		),
 
-		/*
-			beego.NSNamespace("/confirm",
-				beego.NSInclude(&controllers.ConfirmController{}),
-			),
-		*/
-		//beego.NSRouter("/auth/checkDisplayName/:displayname", &controllers.AuthController{}, "get:CheckDisplayName"),
-
 		beego.NSNamespace("/auth",
 			beego.NSRouter("/checkDisplayName/:displayname", &controllers.AuthController{}, "get:CheckDisplayName"),
 			beego.NSRouter("/register", &controllers.AuthController{}, "post:CreateUser"),

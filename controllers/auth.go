@@ -30,10 +30,10 @@ type Social struct {
 }
 
 type AuthedData struct {
-	UID         int64
-	Displayname string
-	Balance     int
-	Pciture     string
+	UID         int64  `json:"uid"`
+	Displayname string `json:"displayname"`
+	Balance     int    `json:"balance"`
+	Pciture     string `json:"picture"`
 }
 
 // CheckDisplayName ...
