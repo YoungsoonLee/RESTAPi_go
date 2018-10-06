@@ -18,7 +18,8 @@ func MakeMail(email string, emailType string, token string) {
 			Name: "Closers! naddic games",
 			Link: "https://example-hermes.com/",
 			// Optional product logo
-			Logo: "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+			Logo:      "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+			Copyright: "Copyright © 2018 naddic games. All rights reserved.",
 		},
 	}
 

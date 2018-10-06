@@ -156,13 +156,7 @@ func AddSocialUser(u User) (int64, string, error) {
 	b := make([]byte, 5) //equals 8 charachters
 	rand.Read(b)
 	s := hex.EncodeToString(b)
-
-	//u.Displayname = "FB" + strconv.FormatInt(time.Now().UnixNano(), 10)
-	if u.Provider == "facebook" {
-		u.Displayname = "FB" + s
-	} else {
-		u.Displayname = "GP" + s
-	}
+	u.Displayname = s
 
 	u.Confirmed = true
 
@@ -190,8 +184,6 @@ func AddSocialUser(u User) (int64, string, error) {
 
 // UpdateSocialInfo ...
 func UpdateSocialInfo(u User) (int64, string, error) {
-
-	u.Confirmed = true
 
 	o := orm.NewOrm()
 	if _, err := o.Update(&u, "Provider", "ProviderAccessToken", "ProviderID", "Picture", "Confirmed"); err != nil {

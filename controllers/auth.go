@@ -223,6 +223,7 @@ func (c *AuthController) Social() {
 			user.ProviderAccessToken = social.ProviderAccessToken
 			user.ProviderID = social.ProviderID
 			user.Picture = social.Picture
+			user.Confirmed = true
 
 			c.updateSocialInfo(user)
 		}
