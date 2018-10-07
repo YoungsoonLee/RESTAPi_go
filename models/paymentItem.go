@@ -1,6 +1,12 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"time"
+
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
+)
 
 /**
   payment_items                //유료, 무료 관련 코인 아이템 테이블. 실제 결제시 참조 되는 테이블로 매우 중요한 테이블 이다.
@@ -30,4 +36,29 @@ type PaymentItem struct {
 	CreateAt        time.Time `orm:"type(datetime);auto_now_add" json:"create_at"` // first save
 	UpdateAt        time.Time `orm:"type(datetime);auto_now" json:"update_at"`     // eveytime save
 	CloseAt         time.Time `orm:"type(datetime);null" json:"close_at"`          //
+}
+
+// AddPaymentItem ...
+func AddPaymentItem(pi PaymentItem) (int, error) {
+
+	// check exists category id
+	o := orm.NewOrm()
+	exist := o.QueryTable("PaymentCategory").Filter("CategoryID", pi.CategoryID).Exist()
+	if !exist {
+		return 0, errors.New("does not exists category id in PaymentCategory")
+	}
+
+	// check pgid
+	exist = o.QueryTable("PaymentGateway").Filter("PgID", pi.PgID).Exist()
+	if !exist {
+		return 0, errors.New("does not exists pgif id in PaymentGateway")
+	}
+
+	_, err := orm.NewOrm().Insert(&pi)
+	if err != nil {
+		beego.Error("error Add PaymentItem: ", err)
+		return 0, err
+	}
+
+	return pi.ItemID, nil
 }

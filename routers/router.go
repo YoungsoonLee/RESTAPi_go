@@ -40,6 +40,8 @@ func init() {
 		beego.NSNamespace("/admin",
 			beego.NSNamespace("/service", beego.NSInclude(&controllers.ServiceController{})),
 			beego.NSNamespace("/paymentgateway", beego.NSInclude(&controllers.PaymentGatewayController{})),
+			beego.NSNamespace("/paymentcategory", beego.NSInclude(&controllers.PaymentCategoryController{})),
+			beego.NSNamespace("/paymentitem", beego.NSInclude(&controllers.PaymentItemController{})),
 		),
 	)
 	beego.AddNamespace(ns)

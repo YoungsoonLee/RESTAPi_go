@@ -1,6 +1,11 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
+)
 
 /**
   payment_category            //아레 item이 어느 카데고리인지 관리 하는 테이블. 유료 무료, 무료일 경우 어떠한 무료 인지 구분 짓는 테이블 이다.(주로 통계용이 주목적이다.)
@@ -20,4 +25,14 @@ type PaymentCategory struct {
 	SubCategoryDescription string    `orm:"size(1000);null" json:"sub_category_description"` // ex)category_id를 다시 상세화 할 때 사용. 주로 통계용
 	CreateAt               time.Time `orm:"type(datetime);auto_now_add" json:"create_at"`    //
 	CloseAt                time.Time `orm:"type(datetime);null" json:"close_at"`             //
+}
+
+func AddPaymentCategory(pc PaymentCategory) (int, error) {
+	_, err := orm.NewOrm().Insert(&pc)
+	if err != nil {
+		beego.Error("error add PaymentCategory: ", err)
+		return 0, err
+	}
+
+	return pc.CategoryID, nil
 }

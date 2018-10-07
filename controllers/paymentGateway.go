@@ -12,21 +12,21 @@ type PaymentGatewayController struct {
 }
 
 // Post ...
-// @Title Create PG
-// @Description create services
-// @Param	body		body 	models.Service	true		"body for service content"
-// @Success 200 {int} models.Service.Id
+// @Title Create Payment Gateway
+// @Description create payment gateway
+// @Param	pg_description	json 	string	false		"pg description"
+// @Success 200 {int} models.PaymentGateway.PgID
 // @Failure 403 body is empty
 // @router / [post]
 func (p *PaymentGatewayController) Post() {
 
 	var pg models.PaymentGateway
-	//service.Description = s.Input().Get("description")
+	err := json.Unmarshal(p.Ctx.Input.RequestBody, &pg)
+	if err != nil {
+		p.ResponseServerError(libs.ErrJSONUnmarshal, err)
+	}
 
-	json.Unmarshal(p.Ctx.Input.RequestBody, &pg)
-
-	//fmt.Println(string(s.Ctx.Input.RequestBody[:]))
-	//fmt.Println(service)
+	// TODO: validation
 
 	// save to db
 	pgid, err := models.AddPaymentGateway(pg)

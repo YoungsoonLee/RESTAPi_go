@@ -62,17 +62,18 @@ func (c *AuthController) CheckDisplayName() {
 // CreateUser ...
 // @Title CreateUser except social
 // @Description create users
-// @Param	displayname		query 	string	true		"The displayname"
-// @Param	email			query 	string	true		"The email"
-// @Param	password		query 	string	true		"The password"
+// @Param	displayname		query 	string	true		"displayname"
+// @Param	email			query 	string	true		"email"
+// @Param	password		query 	string	true		"password"
 // @Success 200 {int} models.User.UID
 // @Failure 403 body is empty
 // @router /CreateUser [post]
 func (c *AuthController) CreateUser() {
 	var user models.User
-	json.Unmarshal(c.Ctx.Input.RequestBody, &user)
-	//fmt.Println(string(c.Ctx.Input.RequestBody[:]))
-	//fmt.Println(user)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
+	if err != nil {
+		c.ResponseCommonError(libs.ErrJSONUnmarshal)
+	}
 
 	// validation
 	c.ValidDisplayname(user.Displayname)
@@ -80,7 +81,7 @@ func (c *AuthController) CreateUser() {
 	c.ValidPassword(user.Password)
 
 	// check dup displayname
-	_, err := models.FindByDisplayname(user.Displayname)
+	_, err = models.FindByDisplayname(user.Displayname)
 	// if err == nil, already exists displayname
 	if err == nil {
 		c.ResponseCommonError(libs.ErrDupDisplayname)
@@ -106,20 +107,20 @@ func (c *AuthController) CreateUser() {
 	c.makeLogin(&user)
 }
 
+// Login ...
 // @Title Login
 // @Description Logs user into the system
-// @Param	displayname		query 	string	true		"The displayname for login"
-// @Param	password		query 	string	true		"The password for login"
+// @Param	displayname		query 	string	true		"displayname for login"
+// @Param	password		query 	string	true		"password for login"
 // @Success 200 {string} login success
 // @Failure 403 user not exist
 // @router /login [post]
 func (c *AuthController) Login() {
-
-	//displayname := c.Input().Get("displayname")
-	//password := c.Input().Get("password")
-
 	var user models.User
-	json.Unmarshal(c.Ctx.Input.RequestBody, &user)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
+	if err != nil {
+		c.ResponseCommonError(libs.ErrJSONUnmarshal)
+	}
 
 	// validation
 	inputPass := user.Password
@@ -129,7 +130,7 @@ func (c *AuthController) Login() {
 	//fmt.Println(user.Displayname, user.Password)
 
 	// Find salt, password hash for auth
-	user, err := models.FindAuthByDisplayname(user.Displayname)
+	user, err = models.FindAuthByDisplayname(user.Displayname)
 	if err != nil {
 		c.ResponseCommonError(libs.ErrPass)
 	}
@@ -150,19 +151,7 @@ func (c *AuthController) Login() {
 
 	// login
 	// TODO: set cookie ???
-	/*
-		et := libs.EasyToken{
-			Displayname: user.Displayname,
-			Uid:         user.Id,
-			Expires:     time.Now().Unix() + 3600, // 1 hour
-		}
-			token, err := et.GetToken()
-			if token == "" || err != nil {
-				c.ResponseCommonError(libs.ErrTokenOther)
-			}
-			//this.Data["json"]  := LoginToken{user.Displayname, user.Id, token}
-			c.ResponseSuccess("login", LoginToken{user.Displayname, user.Id, token})
-	*/
+
 	c.makeLogin(&user)
 }
 
@@ -180,16 +169,11 @@ func (c *AuthController) CheckLogin() {
 	}
 
 	// get userinfo
-	//fmt.Println("check login: ", displayname)
-	//var user models.User
 	var user models.UserFilter
 	user, err = models.FindByID(uid)
-	//fmt.Println("oops: ", user.UID)
 	if err != nil {
 		c.ResponseCommonError(libs.ErrNoUser)
 	}
-
-	//beego.Info(user)
 
 	c.ResponseSuccess("", AuthedData{user.UID, user.Displayname, user.Balance, user.Picture})
 }

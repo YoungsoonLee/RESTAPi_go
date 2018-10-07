@@ -43,5 +43,6 @@ var (
 	ErrPermission   = &ControllerError{400, "10013", "Permission denied"}
 
 	// 90000 ~ related on system error
-	ErrDatabase = &ControllerError{500, "90001", "Database operation error"}
+	ErrDatabase      = &ControllerError{500, "90001", "Database operation error"}
+	ErrJSONUnmarshal = &ControllerError{500, "90002", "JSON Unmarshal error"}
 )
