@@ -21,17 +21,17 @@ type ServiceController struct {
 func (s *ServiceController) Post() {
 
 	var service models.Service
-	//service.Description = s.Input().Get("description")
+	err := json.Unmarshal(s.Ctx.Input.RequestBody, &service)
+	if err != nil {
+		s.ResponseError(libs.ErrJSONUnmarshal, err)
+	}
 
-	json.Unmarshal(s.Ctx.Input.RequestBody, &service)
-
-	//fmt.Println(string(s.Ctx.Input.RequestBody[:]))
-	//fmt.Println(service)
+	// TODO: validation
 
 	// save to db
 	sid, err := models.AddService(service)
 	if err != nil {
-		s.ResponseServerError(libs.ErrDatabase, err)
+		s.ResponseError(libs.ErrDatabase, err)
 	}
 
 	//success

@@ -30,7 +30,7 @@ type PaymentCategory struct {
 func AddPaymentCategory(pc PaymentCategory) (int, error) {
 	_, err := orm.NewOrm().Insert(&pc)
 	if err != nil {
-		beego.Error("error add PaymentCategory: ", err)
+		beego.Error("Error AddPaymentCategory: ", err)
 		return 0, err
 	}
 

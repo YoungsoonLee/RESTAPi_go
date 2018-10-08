@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"regexp"
 
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
@@ -16,19 +15,74 @@ type BaseController struct {
 }
 
 // ResponseError ...
-func (b *BaseController) ResponseError(code string, err error) {
-	//beego.Error(err.Error())
+//func (b *BaseController) ResponseError(code string, err error) {
+func (b *BaseController) ResponseError(e *libs.ControllerError, err error) {
+	// TODO: logging
+	beego.Error(b.Ctx.Request.RequestURI, e.Message, err.Error())
 
 	response := &models.RespCode{
-		Code:    code,
-		Message: err.Error(),
+		Code:    e.Code,
+		Message: e.Message,
+		DevInfo: err.Error(),
 		Data:    nil,
 	}
+	b.Ctx.Output.Status = e.Status
 	b.Ctx.Output.JSON(response, true, true)
+
 	// TODO: logging
 	b.StopRun()
 }
 
+// ValidDisplayname ...
+func (b *BaseController) ValidDisplayname(displayname string) {
+
+	if len(displayname) < 4 || len(displayname) > 16 {
+		//beego.Error("key: displayname, value: ", displayname, ", message: ", libs.ErrDisplayname.Message)
+		b.ResponseError(libs.ErrDisplayname, nil)
+	}
+}
+
+// ValidID ...
+func (b *BaseController) ValidID(id string) {
+
+	if len(id) == 0 {
+		b.ResponseError(libs.ErrIDAbsent, nil)
+	}
+}
+
+// ValidEmail ...
+func (b *BaseController) ValidEmail(email string) {
+	valid := validation.Validation{}
+	v := valid.Email(email, "Email")
+	if !v.Ok {
+		//loggingValidError(v)
+		b.ResponseError(libs.ErrEmail, nil)
+	}
+
+	v = valid.MaxSize(email, 100, "Email")
+	if !v.Ok {
+		//loggingValidError(v)
+		b.ResponseError(libs.ErrMaxEmail, nil)
+	}
+}
+
+// ValidPassword ...
+func (b *BaseController) ValidPassword(password string) {
+	// 8 ~ 16 letters
+	if len(password) < 8 || len(password) > 16 {
+		b.ResponseError(libs.ErrPassword, nil)
+	}
+
+	valid := validation.Validation{}
+	pattern := regexp.MustCompile("") //TODO: add regex for password
+
+	v := valid.Match(password, pattern, "password")
+	if !v.Ok {
+		b.ResponseError(libs.ErrPassword, nil)
+	}
+}
+
+/*
 // ResponseHTTPError ...
 func (b *BaseController) ResponseHTTPError(status int, code string, err error) {
 	b.Ctx.Output.Status = status
@@ -47,60 +101,10 @@ func (b *BaseController) ResponseServerError(e *libs.ControllerError, err error)
 	b.ResponseHTTPError(e.Status, e.Code, fmt.Errorf(e.Message))
 }
 
-// ValidDisplayname ...
-func (b *BaseController) ValidDisplayname(displayname string) {
-
-	if len(displayname) < 4 || len(displayname) > 16 {
-		//beego.Error("key: displayname, value: ", displayname, ", message: ", libs.ErrDisplayname.Message)
-		b.ResponseCommonError(libs.ErrDisplayname)
-	}
-}
-
-// ValidId ...
-func (b *BaseController) ValidId(id string) {
-
-	if len(id) == 0 {
-		b.ResponseCommonError(libs.ErrIDAbsent)
-	}
-}
-
-// ValidEmail ...
-func (b *BaseController) ValidEmail(email string) {
-	valid := validation.Validation{}
-	v := valid.Email(email, "Email")
-	if !v.Ok {
-		//loggingValidError(v)
-		b.ResponseCommonError(libs.ErrEmail)
-	}
-
-	v = valid.MaxSize(email, 100, "Email")
-	if !v.Ok {
-		//loggingValidError(v)
-		b.ResponseCommonError(libs.ErrMaxEmail)
-	}
-}
-
-// ValidPassword ...
-func (b *BaseController) ValidPassword(password string) {
-	// 8 ~ 16 letters
-	if len(password) < 8 || len(password) > 16 {
-		beego.Error("key: password, value: ", password, ", message: ", libs.ErrPassword.Message)
-		b.ResponseCommonError(libs.ErrPassword)
-	}
-
-	valid := validation.Validation{}
-	pattern := regexp.MustCompile("") //TODO: add regex for password
-
-	v := valid.Match(password, pattern, "password")
-	if !v.Ok {
-		loggingValidError(v)
-		b.ResponseCommonError(libs.ErrPassword)
-	}
-}
-
 func loggingValidError(v *validation.Result) {
 	beego.Error("key: ", v.Error.Key, ", value: ", v.Error.Value, ", message: ", v.Error.Message)
 }
+*/
 
 // ResponseSuccess ...
 func (b *BaseController) ResponseSuccess(key string, value interface{}) {

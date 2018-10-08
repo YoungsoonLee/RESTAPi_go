@@ -45,18 +45,19 @@ func AddPaymentItem(pi PaymentItem) (int, error) {
 	o := orm.NewOrm()
 	exist := o.QueryTable("PaymentCategory").Filter("CategoryID", pi.CategoryID).Exist()
 	if !exist {
-		return 0, errors.New("does not exists category id in PaymentCategory")
+		return 0, errors.New("Error AddPaymentItem, does not exists category id in PaymentCategory")
 	}
 
 	// check pgid
 	exist = o.QueryTable("PaymentGateway").Filter("PgID", pi.PgID).Exist()
 	if !exist {
-		return 0, errors.New("does not exists pgif id in PaymentGateway")
+		return 0, errors.New("Error AddPaymentItem, does not exists pgid id in PaymentGateway")
 	}
 
 	_, err := orm.NewOrm().Insert(&pi)
 	if err != nil {
-		beego.Error("error Add PaymentItem: ", err)
+		//TODO: change using common error. see paymentTrys
+		beego.Error("Error AddPaymentItem: ", err)
 		return 0, err
 	}
 

@@ -47,6 +47,22 @@ func init() {
 			MethodParams: param.Make(),
 			Params: nil})
 
+	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:BillingController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:BillingController"],
+		beego.ControllerComments{
+			Method: "GetChargeItems",
+			Router: `/`,
+			AllowHTTPMethods: []string{"GET"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:BillingController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:BillingController"],
+		beego.ControllerComments{
+			Method: "GetPaymentToken",
+			Router: `/`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
 	beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:PaymentCategoryController"] = append(beego.GlobalControllerRouter["github.com/YoungsoonLee/RESTAPi_go/controllers:PaymentCategoryController"],
 		beego.ControllerComments{
 			Method: "Post",

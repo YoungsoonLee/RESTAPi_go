@@ -7,8 +7,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/astaxie/beego"
-
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
 	"github.com/astaxie/beego/orm"
 	uuid "github.com/satori/go.uuid"
@@ -71,26 +69,23 @@ func generatePassHash(password string, salt string) (hash string, err error) {
 		return "", err
 	}
 
-	//fmt.Println(fmt.Sprintf("%x", h), password, salt)
-
 	return fmt.Sprintf("%x", h), nil
 }
 
 // CheckPass compare input password.
-func (u *User) CheckPass(pass string) (ok bool, err error) {
+func (u *User) CheckPass(pass string) (bool, error) {
 	//fmt.Println(pass, u.Salt)
 	hash, err := generatePassHash(pass, u.Salt)
 	if err != nil {
 		return false, err
 	}
 
-	//fmt.Println(u.Password, hash, u.Password == hash)
-
 	return u.Password == hash, nil
 }
 
 // AddUser ...
 func AddUser(u User) (int64, error) {
+
 	// make Id
 	u.UID = time.Now().UnixNano()
 
@@ -117,9 +112,6 @@ func AddUser(u User) (int64, error) {
 		return 0, err
 	}
 	u.ConfirmResetToken = u2.String()
-
-	// set email confirm expire time +1 hour
-	//addTime := time.Now().Add(1 * time.Hour)
 	u.ConfirmResetExpire = time.Now().Add(1 * time.Hour)
 
 	// save to db with transaction user and wallet
@@ -187,6 +179,7 @@ func UpdateSocialInfo(u User) (int64, string, error) {
 
 	o := orm.NewOrm()
 	if _, err := o.Update(&u, "Provider", "ProviderAccessToken", "ProviderID", "Picture", "Confirmed"); err != nil {
+
 		return 0, "", err
 	}
 
@@ -232,8 +225,6 @@ func FindByDisplayname(displayname string) (User, error) {
 		" WHERE Displayname = ?"
 	err := o.Raw(sql, displayname).QueryRow(&user)
 
-	beego.Error(user)
-
 	return user, err
 }
 
@@ -257,7 +248,6 @@ func FindByEmail(email string) (User, error) {
 		" FROM \"user\" " +
 		" WHERE Email = ?"
 	err := o.Raw(sql, email).QueryRow(&user)
-
 	return user, err
 }
 
@@ -281,11 +271,6 @@ func FindByID(id string) (UserFilter, error) {
 		" WHERE \"user\".\"UID\" = \"wallet\".\"UID\" " +
 		" and \"user\".\"UID\" = ?"
 	err := o.Raw(sql, id).QueryRow(&user)
-
-	if err != nil {
-		return user, err
-	}
-
 	return user, err
 }
 
@@ -304,7 +289,7 @@ func FindByProvider(provider string, accessToken string, providerID string) bool
 }
 
 // CheckConfirmEmailToken ...
-func CheckConfirmEmailToken(token string) (*User, *libs.ControllerError) {
+func CheckConfirmEmailToken(token string) (*User, *libs.ControllerError, error) {
 	var user *User
 	o := orm.NewOrm()
 
@@ -320,27 +305,24 @@ func CheckConfirmEmailToken(token string) (*User, *libs.ControllerError) {
 
 	if err == nil {
 		// already confirmed or wrong token
-		beego.Info("CheckConfirmEmailToken (Already confirmed): ", token, " , ", err)
-		return user, libs.ErrAlreadyConfirmed
+		return user, libs.ErrAlreadyConfirmed, err
 	}
 
 	// wrong token
 	err = o.Raw("select \"UID\", Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirmed = false", token).QueryRow(&user)
 	if err != nil {
 		// already confirmed or wrong token
-		beego.Error("error CheckConfirmEmailToken(wrong token): ", token, " , ", err)
-		return user, libs.ErrWrongToken
+		return user, libs.ErrWrongToken, err
 	}
 
 	//  expired token
 	err = o.Raw("select \"UID\", Displayname, Confirmed from \"user\" where Confirm_Reset_Token =? and Confirm_Reset_Expire <= ?", token, time.Now()).QueryRow(&user)
 	if err == nil {
 		// expire token
-		beego.Error("error CheckConfirmEmailToken(expired token): ", token, " , ", err)
-		return user, libs.ErrExpiredToken
+		return user, libs.ErrExpiredToken, err
 	}
 
-	return user, nil
+	return user, nil, nil
 }
 
 // Confirm Email ...
@@ -399,7 +381,7 @@ func SendPasswordResetToken(u User) (User, error) {
 	return u, nil
 }
 
-func CheckResetPasswordToken(resetToken string) (*User, *libs.ControllerError) {
+func CheckResetPasswordToken(resetToken string) (*User, *libs.ControllerError, error) {
 	var user *User
 
 	o := orm.NewOrm()
@@ -407,19 +389,17 @@ func CheckResetPasswordToken(resetToken string) (*User, *libs.ControllerError) {
 	err := o.Raw("select \"UID\", Displayname, Confirmed from \"user\" where Password_Reset_Token =?", resetToken).QueryRow(&user)
 	if err != nil {
 		// already confirmed or wrong token
-		beego.Error("error CheckResetPasswordToken(wrong token): ", resetToken, " , ", err)
-		return user, libs.ErrTokenInvalid
+		return user, libs.ErrTokenInvalid, err
 	}
 
 	//  expired token
 	err = o.Raw("select \"UID\", Displayname, Confirmed from \"user\" where Password_Reset_Token =? and Password_Reset_Expire <= ?", resetToken, time.Now()).QueryRow(&user)
 	if err == nil {
-		// expire token
-		beego.Error("error CheckResetPasswordToken(expired token): ", resetToken, " , ", err)
-		return user, libs.ErrExpiredToken
+		// expire tokens
+		return user, libs.ErrExpiredToken, err
 	}
 
-	return user, nil
+	return user, nil, nil
 }
 
 // ResetPassword ...

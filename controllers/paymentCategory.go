@@ -25,7 +25,7 @@ func (p *PaymentCategoryController) Post() {
 
 	err := json.Unmarshal(p.Ctx.Input.RequestBody, &pc)
 	if err != nil {
-		p.ResponseServerError(libs.ErrJSONUnmarshal, err)
+		p.ResponseError(libs.ErrJSONUnmarshal, err)
 	}
 
 	// TODO: validation
@@ -33,7 +33,7 @@ func (p *PaymentCategoryController) Post() {
 	// save to db
 	pcid, err := models.AddPaymentCategory(pc)
 	if err != nil {
-		p.ResponseServerError(libs.ErrDatabase, err)
+		p.ResponseError(libs.ErrDatabase, err)
 	}
 
 	//success

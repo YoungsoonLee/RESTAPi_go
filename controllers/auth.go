@@ -5,22 +5,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego"
-
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
 	"github.com/YoungsoonLee/RESTAPi_go/models"
 )
 
+// AuthController ...
 type AuthController struct {
 	BaseController
 }
 
+// LoginToken ...
 type LoginToken struct {
 	Displayname string `json:"displayname"`
 	UID         int64  `json:"uid"`
 	Token       string `json:"token"`
 }
 
+// Social ...
 type Social struct {
 	Provider            string `json:"provider"`
 	ProviderAccessToken string `json:"accessToken"`
@@ -29,6 +30,7 @@ type Social struct {
 	Picture             string `json:"picture"`
 }
 
+// AuthedData ...
 type AuthedData struct {
 	UID         int64  `json:"uid"`
 	Displayname string `json:"displayname"`
@@ -52,7 +54,7 @@ func (c *AuthController) CheckDisplayName() {
 	_, err := models.FindByDisplayname(displayname)
 	// if err == nil, already exists displayname
 	if err == nil {
-		c.ResponseCommonError(libs.ErrDupDisplayname)
+		c.ResponseError(libs.ErrDupDisplayname, err)
 	}
 
 	//success
@@ -72,7 +74,7 @@ func (c *AuthController) CreateUser() {
 	var user models.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
-		c.ResponseCommonError(libs.ErrJSONUnmarshal)
+		c.ResponseError(libs.ErrJSONUnmarshal, err)
 	}
 
 	// validation
@@ -84,23 +86,20 @@ func (c *AuthController) CreateUser() {
 	_, err = models.FindByDisplayname(user.Displayname)
 	// if err == nil, already exists displayname
 	if err == nil {
-		c.ResponseCommonError(libs.ErrDupDisplayname)
+		c.ResponseError(libs.ErrDupDisplayname, err)
 	}
 	// check dup email
 	_, err = models.FindByEmail(user.Email)
 	// if err == nil, already exists Email
 	if err == nil {
-		c.ResponseCommonError(libs.ErrDupEmail)
+		c.ResponseError(libs.ErrDupEmail, err)
 	}
 
 	// save to db
 	UID, err := models.AddUser(user)
 	if err != nil {
-		c.ResponseServerError(libs.ErrDatabase, err)
+		c.ResponseError(libs.ErrDatabase, err)
 	}
-
-	//success
-	//c.ResponseSuccess("uid", strconv.FormatInt(uid, 10))
 
 	// auto login
 	user.UID = UID
@@ -119,7 +118,7 @@ func (c *AuthController) Login() {
 	var user models.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
-		c.ResponseCommonError(libs.ErrJSONUnmarshal)
+		c.ResponseError(libs.ErrJSONUnmarshal, err)
 	}
 
 	// validation
@@ -132,25 +131,22 @@ func (c *AuthController) Login() {
 	// Find salt, password hash for auth
 	user, err = models.FindAuthByDisplayname(user.Displayname)
 	if err != nil {
-		c.ResponseCommonError(libs.ErrPass)
+		c.ResponseError(libs.ErrPass, err)
 	}
 
 	if user.Provider == "facebook" && user.Password == "" {
-		c.ResponseCommonError(libs.ErrLoginFacebook)
+		c.ResponseError(libs.ErrLoginFacebook, nil)
 	}
 	if user.Provider == "google" && user.Password == "" {
-		c.ResponseCommonError(libs.ErrLoginGoogle)
+		c.ResponseError(libs.ErrLoginGoogle, nil)
 	}
 
 	// check password
 	ok, err := user.CheckPass(inputPass)
 	if !ok || err != nil {
 		// wrong password
-		c.ResponseCommonError(libs.ErrPass)
+		c.ResponseError(libs.ErrPass, err)
 	}
-
-	// login
-	// TODO: set cookie ???
 
 	c.makeLogin(&user)
 }
@@ -162,17 +158,17 @@ func (c *AuthController) CheckLogin() {
 	authtoken := strings.TrimSpace(c.Ctx.Request.Header.Get("Authorization"))
 	valido, uid, err := et.ValidateToken(authtoken)
 
-	beego.Info("Check Login: ", uid, valido)
+	//beego.Info("Check Login: ", uid, valido)
 
 	if !valido || err != nil {
-		c.ResponseCommonError(libs.ErrExpiredToken)
+		c.ResponseError(libs.ErrExpiredToken, err)
 	}
 
 	// get userinfo
 	var user models.UserFilter
 	user, err = models.FindByID(uid)
 	if err != nil {
-		c.ResponseCommonError(libs.ErrNoUser)
+		c.ResponseError(libs.ErrNoUser, err)
 	}
 
 	c.ResponseSuccess("", AuthedData{user.UID, user.Displayname, user.Balance, user.Picture})
@@ -188,14 +184,17 @@ func (c *AuthController) CheckLogin() {
 // @router /Social [post]
 func (c *AuthController) Social() {
 	var social Social
-	json.Unmarshal(c.Ctx.Input.RequestBody, &social)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &social)
+	if err != nil {
+		c.ResponseError(libs.ErrJSONUnmarshal, err)
+	}
 
 	// TODO: validation
 	// unless provier is null or accessToken is null, get error
 	//fmt.Println(social)
 
 	var user models.User
-	user, err := models.FindByEmail(social.Email)
+	user, err = models.FindByEmail(social.Email)
 
 	// if err == nil, already exists Email
 	if err == nil {
@@ -241,7 +240,7 @@ func (c *AuthController) createSocialUser(user models.User) {
 
 	UID, displayname, err := models.AddSocialUser(user)
 	if err != nil {
-		c.ResponseServerError(libs.ErrDatabase, err)
+		c.ResponseError(libs.ErrDatabase, err)
 	}
 
 	user.UID = UID
@@ -252,7 +251,7 @@ func (c *AuthController) createSocialUser(user models.User) {
 func (c *AuthController) updateSocialInfo(user models.User) {
 	UID, displayname, err := models.UpdateSocialInfo(user)
 	if err != nil {
-		c.ResponseServerError(libs.ErrDatabase, err)
+		c.ResponseError(libs.ErrDatabase, err)
 	}
 
 	user.UID = UID
@@ -272,7 +271,7 @@ func (c *AuthController) makeLogin(user *models.User) {
 
 	token, err := et.GetToken()
 	if token == "" || err != nil {
-		c.ResponseCommonError(libs.ErrTokenOther)
+		c.ResponseError(libs.ErrTokenOther, nil)
 	}
 
 	// TODO: add balance to LoginToken

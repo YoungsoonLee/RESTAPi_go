@@ -36,6 +36,11 @@ func init() {
 			beego.NSRouter("/logout", &controllers.AuthController{}, "post:Logout"),
 		),
 
+		beego.NSNamespace("/billing",
+			beego.NSRouter("/getChargeItems", &controllers.BillingController{}, "get:GetChargeItems"),
+			beego.NSRouter("/getPaymentToken", &controllers.BillingController{}, "post:GetPaymentToken"),
+		),
+
 		//adimn
 		beego.NSNamespace("/admin",
 			beego.NSNamespace("/service", beego.NSInclude(&controllers.ServiceController{})),

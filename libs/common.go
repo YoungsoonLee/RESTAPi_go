@@ -33,16 +33,26 @@ var (
 	ErrLoginFacebook    = &ControllerError{400, "10017", "Your disaplayname is connected a facebook. use facebook login."}
 	ErrLoginGoogle      = &ControllerError{400, "10018", "Your disaplayname is connected a Google. use Google login."}
 
-	ErrNoUserPass   = &ControllerError{400, "10006", "User information does not exist or the password is incorrect"}
-	ErrNoUserChange = &ControllerError{400, "10007", "User information does not exist or data has not changed"}
-	ErrInvalidUser  = &ControllerError{400, "10008", "User information is incorrect"}
-	ErrOpenFile     = &ControllerError{500, "10009", "Error opening file"}
-	ErrWriteFile    = &ControllerError{500, "10010", "Error writing a file"}
-	ErrSystem       = &ControllerError{500, "10011", "Operating system error"}
-	ErrExpired      = &ControllerError{400, "10012", "Login has expired"}
-	ErrPermission   = &ControllerError{400, "10013", "Permission denied"}
+	/*
+		ErrNoUserPass   = &ControllerError{400, "10006", "User information does not exist or the password is incorrect"}
+		ErrNoUserChange = &ControllerError{400, "10007", "User information does not exist or data has not changed"}
+		ErrInvalidUser  = &ControllerError{400, "10008", "User information is incorrect"}
+		ErrOpenFile     = &ControllerError{500, "10009", "Error opening file"}
+		ErrWriteFile    = &ControllerError{500, "10010", "Error writing a file"}
+		ErrSystem       = &ControllerError{500, "10011", "Operating system error"}
+		ErrExpired      = &ControllerError{400, "10012", "Login has expired"}
+		ErrPermission   = &ControllerError{400, "10013", "Permission denied"}
+	*/
+
+	// 20000 ~ related in payment
+	ErrNoPaymentItem = &ControllerError{400, "20001", "PaymentItem information does not exists"}
+	ErrNoCategoryID  = &ControllerError{400, "20002", "PaymentCategory information does not exists"}
+	ErrNoPGID        = &ControllerError{400, "20003", "PaymentGateway information does not exists"}
 
 	// 90000 ~ related on system error
 	ErrDatabase      = &ControllerError{500, "90001", "Database operation error"}
 	ErrJSONUnmarshal = &ControllerError{500, "90002", "JSON Unmarshal error"}
+	ErrFailSalt      = &ControllerError{500, "90003", "Generate error"}
+	ErrFailHash      = &ControllerError{500, "90004", "Generate Hash error"}
+	ErrMakeToken     = &ControllerError{500, "90005", "Generate Token error"}
 )

@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/astaxie/beego"
-
 	"github.com/astaxie/beego/orm"
 )
 
@@ -28,14 +26,8 @@ func AddService(s Service) (string, error) {
 	s.SID = "S" + strconv.FormatInt(time.Now().UnixNano(), 10)
 	s.Key = hex.EncodeToString(b)
 
-	//fmt.Println(s)
-
 	_, err := orm.NewOrm().Raw("INSERT INTO service (\"SID\", key, Description, Create_At) VALUES ($1, $2, $3, $4)", s.SID, s.Key, s.Description, time.Now()).Exec()
-	//o := orm.NewOrm()
-	//_, err := o.Insert(&s)
-
 	if err != nil {
-		beego.Error("Error add service: ", err)
 		return "", err
 	}
 

@@ -23,7 +23,7 @@ func (p *PaymentGatewayController) Post() {
 	var pg models.PaymentGateway
 	err := json.Unmarshal(p.Ctx.Input.RequestBody, &pg)
 	if err != nil {
-		p.ResponseServerError(libs.ErrJSONUnmarshal, err)
+		p.ResponseError(libs.ErrJSONUnmarshal, err)
 	}
 
 	// TODO: validation
@@ -31,7 +31,7 @@ func (p *PaymentGatewayController) Post() {
 	// save to db
 	pgid, err := models.AddPaymentGateway(pg)
 	if err != nil {
-		p.ResponseServerError(libs.ErrDatabase, err)
+		p.ResponseError(libs.ErrDatabase, err)
 	}
 
 	//success

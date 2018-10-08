@@ -27,7 +27,7 @@ func AddPaymentGateway(pg PaymentGateway) (int, error) {
 
 	_, err := orm.NewOrm().Insert(&pg)
 	if err != nil {
-		beego.Error("error add paymentgateway: ", err)
+		beego.Error("Error AddPaymentGateway: ", err)
 		return 0, err
 	}
 

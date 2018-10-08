@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/astaxie/beego"
@@ -28,17 +27,16 @@ func (u *UserController) ConfirmEmail() {
 	//fmt.Println(confirmToken)
 
 	if len(confirmToken) == 0 {
-		u.ResponseCommonError(libs.ErrTokenAbsent)
+		u.ResponseError(libs.ErrTokenAbsent, nil)
 	}
 
 	// find user by email confirm token
-	user, libErr := models.CheckConfirmEmailToken(confirmToken)
+	user, libErr, err := models.CheckConfirmEmailToken(confirmToken)
 	if libErr == nil {
 		// update
 		_, err := models.ConfirmEmail(*user)
 		if err != nil {
-			beego.Error("email confirm update error: ", err)
-			u.ResponseCommonError(libs.ErrSystem)
+			u.ResponseError(libs.ErrDatabase, err)
 		}
 	} else {
 		if libErr.Code == "10008" {
@@ -46,7 +44,7 @@ func (u *UserController) ConfirmEmail() {
 			u.ResponseSuccess("UID", strconv.FormatInt(user.UID, 10))
 		} else {
 			// error
-			u.ResponseCommonError(libErr)
+			u.ResponseError(libErr, err)
 		}
 	}
 
@@ -67,14 +65,14 @@ func (u *UserController) ResendConfirmEmail() {
 	user, err := models.FindByEmail(email)
 	// if err == nil, already exists Email
 	if err != nil {
-		u.ResponseCommonError(libs.ErrNoUser)
+		u.ResponseError(libs.ErrNoUser, err)
 	}
 
 	// update token and send email with confirm token
 	_, err = models.ResendConfirmEmail(user)
 	if err != nil {
 		beego.Error("email confirm update error: ", err)
-		u.ResponseCommonError(libs.ErrSystem)
+		u.ResponseError(libs.ErrDatabase, err)
 	}
 
 	u.ResponseSuccess("", user)
@@ -93,14 +91,13 @@ func (u *UserController) ForogtPassword() {
 	user, err := models.FindByEmail(email)
 	// if err == nil, already exists Email
 	if err != nil {
-		u.ResponseCommonError(libs.ErrNoUser)
+		u.ResponseError(libs.ErrNoUser, err)
 	}
 	//fmt.Println(user)
 	// send forgot password token
 	_, err = models.SendPasswordResetToken(user)
 	if err != nil {
-		beego.Error("send password reset token error: ", err)
-		u.ResponseCommonError(libs.ErrSystem)
+		u.ResponseError(libs.ErrDatabase, err)
 	}
 
 	u.ResponseSuccess("", user)
@@ -112,18 +109,18 @@ func (u *UserController) IsValidResetPasswordToken() {
 	//fmt.Println(confirmToken)
 
 	if len(resetToken) == 0 {
-		u.ResponseCommonError(libs.ErrTokenAbsent)
+		u.ResponseError(libs.ErrTokenAbsent, nil)
 	}
 
 	// find user by reset token
-	user, libErr := models.CheckResetPasswordToken(resetToken)
+	user, libErr, err := models.CheckResetPasswordToken(resetToken)
 	if libErr != nil {
 		if libErr.Code == "10008" {
 			// alaredy confirmed
 			u.ResponseSuccess("UID", strconv.FormatInt(user.UID, 10))
 		} else {
 			// error
-			u.ResponseCommonError(libErr)
+			u.ResponseError(libErr, err)
 		}
 	}
 
@@ -137,12 +134,12 @@ func (u *UserController) ResetPassword() {
 	var resetPassword ResetPassword
 	err := json.Unmarshal(u.Ctx.Input.RequestBody, &resetPassword)
 	if err != nil {
-		fmt.Println(err)
+		u.ResponseError(libs.ErrJSONUnmarshal, err)
 	}
 
 	if err := models.ResetPassword(resetPassword.ResetToken, resetPassword.Password); err != nil {
 		beego.Error("reset password error: ", err)
-		u.ResponseCommonError(libs.ErrSystem)
+		u.ResponseError(libs.ErrDatabase, err)
 	}
 
 	u.ResponseSuccess("resetToken", resetPassword.ResetToken)
@@ -151,16 +148,14 @@ func (u *UserController) ResetPassword() {
 // GetProfile ...
 func (u *UserController) GetProfile() {
 	var user models.UserFilter
-
 	UID := u.GetString(":UID")
 
 	// validation
-	u.ValidId(UID)
+	u.ValidID(UID)
 
 	user, err := models.FindByID(UID)
-	// if err == nil, already exists displayname
 	if err != nil {
-		u.ResponseCommonError(libs.ErrNoUser)
+		u.ResponseError(libs.ErrNoUser, err)
 	}
 	u.ResponseSuccess("", user)
 }
@@ -168,11 +163,13 @@ func (u *UserController) GetProfile() {
 // UpdateProfile ...
 func (u *UserController) UpdateProfile() {
 	var user models.User
-	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
+	err := json.Unmarshal(u.Ctx.Input.RequestBody, &user)
+	if err != nil {
+		u.ResponseError(libs.ErrJSONUnmarshal, err)
+	}
 
 	if _, err := models.UpdateProfile(user); err != nil {
-		beego.Error("update profile error: ", err)
-		u.ResponseCommonError(libs.ErrSystem)
+		u.ResponseError(libs.ErrDatabase, err)
 	}
 	u.ResponseSuccess("", user)
 }
@@ -180,13 +177,13 @@ func (u *UserController) UpdateProfile() {
 // UpdatePassword ...
 func (u *UserController) UpdatePassword() {
 	var user models.User
-	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
-
-	fmt.Println(user)
+	err := json.Unmarshal(u.Ctx.Input.RequestBody, &user)
+	if err != nil {
+		u.ResponseError(libs.ErrJSONUnmarshal, err)
+	}
 
 	if _, err := models.UpdatePassword(user); err != nil {
-		beego.Error("update profile error: ", err)
-		u.ResponseCommonError(libs.ErrSystem)
+		u.ResponseError(libs.ErrDatabase, err)
 	}
 	u.ResponseSuccess("", user)
 
