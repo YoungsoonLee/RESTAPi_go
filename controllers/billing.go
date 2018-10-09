@@ -91,6 +91,7 @@ func (b *BillingController) GetPaymentToken() {
 }
 
 // CallbackXsolla ...
+// @Title Get xsolla callback data
 func (b *BillingController) CallbackXsolla() {
 	var xsollaData XSollaData
 	err := json.Unmarshal(b.Ctx.Input.RequestBody, &xsollaData)
