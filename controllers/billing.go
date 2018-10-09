@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
 	"github.com/YoungsoonLee/RESTAPi_go/models"
@@ -11,6 +12,7 @@ type BillingController struct {
 	BaseController
 }
 
+/*
 type PayTransaction struct {
 	UID             int
 	ItemID          int
@@ -19,6 +21,7 @@ type PayTransaction struct {
 	Price           int
 	PxID            string //paytransaction id
 }
+*/
 
 // GetChargeItems ...
 // @Title Create Payment Category
@@ -56,11 +59,13 @@ func (b *BillingController) GetPaymentToken() {
 
 	// validation param
 
-	pxid, err := models.AddPaymentTry(pt)
+	pt, err = models.AddPaymentTry(pt)
 	if err != nil {
 		b.ResponseError(libs.ErrDatabase, err)
 	}
 
-	b.ResponseSuccess("pxid", pxid)
+	fmt.Println(pt)
+
+	b.ResponseSuccess("", pt)
 
 }

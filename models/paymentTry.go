@@ -3,10 +3,12 @@ package models
 import (
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 )
 
@@ -30,22 +32,23 @@ type PaymentTry struct {
 	Price    int       `json:"price"`                                      // not null,
 	Amount   int       `json:"amount"`                                     // not null, 실제 적립되는 cyber coin 양
 	TriedAt  time.Time `orm:"type(datetime);auto_now_add" json:"tried_at"` // first save
+	Mode     string    `orm:"-" json:"mode"`                               // xsolla mode
 }
 
 // AddPaymentTry ...
-func AddPaymentTry(pt PaymentTry) (string, error) {
+func AddPaymentTry(pt PaymentTry) (PaymentTry, error) {
 	// check UID
 	o := orm.NewOrm()
 	exist := o.QueryTable("user").Filter("UID", pt.UID).Exist()
 	if !exist {
-		return "", errors.New(libs.ErrNoUser.Message)
+		return PaymentTry{}, errors.New(libs.ErrNoUser.Message)
 	}
 
 	// set PgID, Currency, Price, Amount through paymentItem
 	sql := "SELECT \"ItemID\", \"PgID\", Currency, Price, Amount FROM Payment_Item WHERE \"ItemID\" = ?"
 	err := o.Raw(sql, pt.ItemID).QueryRow(&pt)
 	if err != nil {
-		return "", err
+		return PaymentTry{}, err
 	}
 
 	// set PxID
@@ -59,8 +62,16 @@ func AddPaymentTry(pt PaymentTry) (string, error) {
 
 	_, err = o.Raw(sql, pt.PxID, pt.UID, pt.ItemID, pt.PgID, pt.Currency, pt.Price, pt.Amount, time.Now()).Exec()
 	if err != nil {
-		return "", err
+		return PaymentTry{}, err
 	}
 
-	return pt.PxID, nil
+	if beego.BConfig.RunMode == "dev" {
+		pt.Mode = "sandbox"
+	} else {
+		pt.Mode = "production"
+	}
+
+	fmt.Println(pt)
+
+	return pt, nil
 }
