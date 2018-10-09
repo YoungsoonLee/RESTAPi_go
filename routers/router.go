@@ -39,6 +39,8 @@ func init() {
 		beego.NSNamespace("/billing",
 			beego.NSRouter("/getChargeItems", &controllers.BillingController{}, "get:GetChargeItems"),
 			beego.NSRouter("/getPaymentToken", &controllers.BillingController{}, "post:GetPaymentToken"),
+			beego.NSRouter("/callbackXsolla", &controllers.BillingController{}, "post:CallbackXsolla"),
+			//callbackXsolla
 		),
 
 		//adimn

@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/YoungsoonLee/RESTAPi_go/libs"
 	"github.com/YoungsoonLee/RESTAPi_go/models"
@@ -12,16 +13,35 @@ type BillingController struct {
 	BaseController
 }
 
-/*
-type PayTransaction struct {
-	UID             int
-	ItemID          int
-	ItemName        string
-	ItemDescription string
-	Price           int
-	PxID            string //paytransaction id
+// Xsolla struct
+type XSuser struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Ip    string `json:"ip"`
 }
-*/
+
+type XSpurchaseDetail struct {
+	Currency string `json:"currency"`
+	Amount   string `json:"amount"`
+}
+
+type XSpurchase struct {
+	Total XSpurchaseDetail
+}
+
+type XStransaction struct {
+	ID          string    `json:"id"`           // TxID from Xsolla
+	ExternalID  string    `json:"external_id"`  // PxID
+	PaymentDate time.Time `json:"payment_date"` // transaction_at
+}
+
+type XSollaData struct {
+	Signature        string        `json:"signature"`
+	NotificationType string        `json:"notification_type"`
+	User             XSuser        `json:"user"`
+	Purchase         XSpurchase    `json:"purchase"`
+	Transaction      XStransaction `json:"transaction"`
+}
 
 // GetChargeItems ...
 // @Title Create Payment Category
@@ -68,4 +88,16 @@ func (b *BillingController) GetPaymentToken() {
 
 	b.ResponseSuccess("", pt)
 
+}
+
+// CallbackXsolla ...
+func (b *BillingController) CallbackXsolla() {
+	var xsollaData XSollaData
+	err := json.Unmarshal(b.Ctx.Input.RequestBody, &xsollaData)
+	if err != nil {
+		b.ResponseError(libs.ErrJSONUnmarshal, err)
+	}
+
+	fmt.Println("xsollaData: ", xsollaData)
+	fmt.Println("before unmarshall: ", string(b.Ctx.Input.RequestBody[:]))
 }
